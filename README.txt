@@ -1,4 +1,4 @@
-**Experiment guideline please see Appendix A in the paper: https://arxiv.org/pdf/2502.06830**
+**Experiment guideline** please see Appendix A in the paper: https://arxiv.org/pdf/2502.06830
 
 .py files contain functions/classes to run .ipynb
 

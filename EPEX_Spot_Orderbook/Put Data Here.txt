@@ -1,4 +1,0 @@
-Put your orderbook in this folder and delete this file.
-
-Example orderbook structure please see Appendix A in the paper: https://arxiv.org/pdf/2502.06830
-

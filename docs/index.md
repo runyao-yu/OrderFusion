@@ -1,5 +1,5 @@
 ---
-title: OrderFusion
+title: OrderFusion - Foundation Model for Probabilistic Intraday Electricity Price Forecasting
 description: Foundation Model for Probabilistic Intraday Electricity Price Forecasting
 ---
 
@@ -16,9 +16,7 @@ Accurate and reliable probabilistic forecasting of intraday electricity prices i
 ## Model Structure
 ![Model structure](assets/model_structure.PNG)
 
-![Teaser](assets/trading.gif)
-
-<iframe width="100%" height="420" src="https://www.youtube.com/embed/XXXXXXXX" frameborder="0" allowfullscreen></iframe>
+![Teaser](assets/Trade.gif)
 
 ## Citation
 

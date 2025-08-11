@@ -1,10 +1,10 @@
 ---
-title: Foundation Model for Probabilistic Intraday Electricity Price Forecasting
+title: OrderFusion 
 description: Foundation Model for Probabilistic Intraday Electricity Price Forecasting
 ---
 
-![teaser](assets/Trade.gif){: style="float:right; height:28px; margin-left:12px;" }
-# OrderFusion
+![teaser](assets/Trade.gif){: style="float:right; height:84px; margin-left:12px;" }
+# Foundation Model for Probabilistic Intraday Electricity Price Forecasting
 <div style="clear:both;"></div>
 
 [![arXiv](https://img.shields.io/badge/arXiv-2502.06830-b31b1b.svg)](https://arxiv.org/abs/2502.06830)
@@ -12,9 +12,8 @@ description: Foundation Model for Probabilistic Intraday Electricity Price Forec
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/runyao-yu/)
 [![Email](https://img.shields.io/badge/Email-Contact-D14836?logo=gmail&logoColor=white)](mailto:runyao.yu@tudelft.nl)
 
-![Affiliations](assets/affiliations.PNG){: style="float:right; height:28px; margin-left:12px;" }
 **Authors:** Runyao Yu, Yuchen Tao, Fabian Leimgruber, Tara Esterl, Jochen L. Cremer
-<div style="clear:both;"></div>
+![Affiliations](assets/affiliations.PNG){: style="float:left; height:128px;" }
 
 ## Abstract
 We propose an end-to-end foundation model called OrderFusion, tailored for the intraday electricity market. 

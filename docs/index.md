@@ -3,11 +3,11 @@ title: OrderFusion
 description: Foundation Model for Probabilistic Intraday Electricity Price Forecasting
 ---
 
-![Affiliations](assets/affiliations.PNG){: style="float:left; height:100px;" }
+![Affiliations](assets/affiliations.PNG){: style="float:left; height:70px;" }
 <div style="clear:both;"></div>
 
+![teaser](assets/Trade.gif){: style="float:right; height:84px; margin-left:12px;" }
 # OrderFusion: Foundation Model for Probabilistic Intraday Electricity Price Forecasting
-![teaser](assets/Trade.gif){: style="float:left; height:128px;" }
 <div style="clear:both;"></div>
 
 [![arXiv](https://img.shields.io/badge/arXiv-2502.06830-b31b1b.svg)](https://arxiv.org/abs/2502.06830)

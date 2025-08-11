@@ -10,7 +10,7 @@ countries = ['germany']
 resolutions = ['h'] 
 
 # price indice: 'ID3', 'ID2', or 'ID1'
-indices = ['ID2'] 
+indices = ['ID1'] 
 
 # start date for training data; 24 months for training, 6 months for validation, 6 months for testing
 train_start_date, train_end_date, split_len = '2022-01-01', '2024-01-01', (24, 6, 6)  
@@ -20,14 +20,13 @@ years = [2022, 2023, 2024]
 quantiles = [0.1, 0.5, 0.9] 
 
 # hidden_dimension and number of jump fusion blocks
-model_shapes = [[64, 1], [64, 2], [64, 3]] 
-model_shapes = [[64, 0]] 
+model_shapes = [[64, 3]] 
 
 # recommended number of epochs and batch size are 50 and 1024 respectively
 epoch, batch_size = 50, 256 
 
 # T_max or number of trades in the input sequence
-points = [16] 
+points = [64] 
 ''' recommended T_max values are:
     German market: 64 for ID1, 16 for ID2, and 4 for ID3
     Austrian market: 16 for ID1, 4 for ID2, and 1 for ID3

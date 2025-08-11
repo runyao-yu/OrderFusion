@@ -1,12 +1,21 @@
+<p align="right" style="margin:0 0 8px 0;">
+  <img src="assets/affiliations.PNG" alt="Affiliations" height="56" style="max-width:40vw;">
+</p>
+
 ---
-title: OrderFusion - Foundation Model for Probabilistic Intraday Electricity Price Forecasting
+title: Foundation Model for Probabilistic Intraday Electricity Price Forecasting
 description: Foundation Model for Probabilistic Intraday Electricity Price Forecasting
 ---
+<p align="left">
+  <img src="assets/Trade.gif" alt="Teaser" width="128">
+</p>
 
 # OrderFusion
 
 [![arXiv](https://img.shields.io/badge/arXiv-2502.06830-b31b1b.svg)](https://arxiv.org/abs/2502.06830)
 [![Code](https://img.shields.io/badge/GitHub-Repository-181717.svg)](https://github.com/runyao-yu/OrderFusion)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/runyao-yu/)
+[![Email](https://img.shields.io/badge/Email-Contact-D14836?logo=gmail&logoColor=white)](mailto:runyao.yu@tudelft.nl)
 
 **Authors:** Runyao Yu, Yuchen Tao, Fabian Leimgruber, Tara Esterl, Jochen L. Cremer
 
@@ -16,13 +25,11 @@ Accurate and reliable probabilistic forecasting of intraday electricity prices i
 ## Model Structure
 ![Model structure](assets/model_structure.PNG)
 
-![Teaser](assets/Trade.gif)
-
 ## Citation
 
 ```bibtex
-@misc{yu2025orderfusion,
-  title         = {OrderFusion: Encoding Orderbook for End-to-End Probabilistic Intraday Electricity Price Prediction},
+@misc{yu2025OrderFusion,
+  title         = {OrderFusion: Foundation Model for Probabilistic Intraday Electricity Price Forecasting Using Orderbook},
   author        = {Yu, Runyao and Tao, Yuchen and Leimgruber, Fabian and Esterl, Tara and Cremer, Jochen L.},
   year          = {2025},
   eprint        = {2502.06830},

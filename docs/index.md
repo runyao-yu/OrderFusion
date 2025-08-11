@@ -13,11 +13,15 @@ description: Foundation Model for Probabilistic Intraday Electricity Price Forec
 ## Abstract
 Accurate and reliable probabilistic forecasting of intraday electricity prices is essential to manage market uncertainties and support robust trading strategies. However, current methods rely heavily on domain feature extraction and fail to capture the dynamics between buy and sell orders, limiting the ability to form rich representations of the orderbook. Furthermore, these methods often require training separate models for different quantiles and face the quantile crossing issue, where predicted upper quantiles fall below lower ones. To address these challenges, we propose an end-to-end foundation model called OrderFusion, tailored for the intraday electricity market. OrderFusion encodes the orderbook into a 2.5D representation and employs a jump fusion backbone to model buy-sell dynamics without the need for domain feature extraction. The head anchors on the median quantile and hierarchically estimates other quantiles through constrained residuals, ensuring monotonicity. We conduct extensive experiments and ablation studies on three key price indices (ID1, ID2, and ID3) using three years of orderbook data from the German market. To assess the generalizability of the proposed foundation model, we further evaluate it on the Austrian market. The results confirm that OrderFusion remains accurate, reliable, and generalizable across different market settings.
 
+## Model Structure
+![Model structure](assets/model_structure.PNG)
+
 ![Teaser](assets/trading.gif)
 
 <iframe width="100%" height="420" src="https://www.youtube.com/embed/XXXXXXXX" frameborder="0" allowfullscreen></iframe>
 
 ## Citation
+
 ```bibtex
 @misc{yu2025orderfusion,
   title         = {OrderFusion: Encoding Orderbook for End-to-End Probabilistic Intraday Electricity Price Prediction},
@@ -28,3 +32,4 @@ Accurate and reliable probabilistic forecasting of intraday electricity prices i
   primaryClass  = {q-fin.CP},
   url           = {https://arxiv.org/abs/2502.06830}
 }
+```

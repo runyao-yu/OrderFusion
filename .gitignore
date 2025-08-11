@@ -1,4 +1,6 @@
-*.pkl
+Data/*.pkl
+!Data/.gitkeep
+
 *.csv
 *.keras
 __pycache__

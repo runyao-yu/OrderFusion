@@ -1,13 +1,10 @@
 ---
 title: OrderFusion 
-description: Foundation Model for Probabilistic Intraday Electricity Price Forecasting
+description: Foundation Model for Probabilistic Intraday Electricity Price Forecasting Using Orderbook
 ---
 
-![Affiliations](assets/affiliations.PNG){: style="float:left; height:70px;" }
-<div style="clear:both;"></div>
-
 ![teaser](assets/Trade.gif){: style="float:right; height:84px; margin-left:12px;" }
-# OrderFusion: Foundation Model for Probabilistic Intraday Electricity Price Forecasting
+# OrderFusion: Foundation Model for Probabilistic Intraday Electricity Price Forecasting Using Orderbook
 <div style="clear:both;"></div>
 
 [![arXiv](https://img.shields.io/badge/arXiv-2502.06830-b31b1b.svg)](https://arxiv.org/abs/2502.06830)
@@ -15,7 +12,9 @@ description: Foundation Model for Probabilistic Intraday Electricity Price Forec
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/runyao-yu/)
 [![Email](https://img.shields.io/badge/Email-Contact-D14836?logo=gmail&logoColor=white)](mailto:runyao.yu@tudelft.nl)
 
-**Authors:** Runyao Yu, Yuchen Tao, Fabian Leimgruber, Tara Esterl, Jochen L. Cremer
+**Authors:** Runyao Yu, Yuchen Tao, Fabian Leimgruber, Tara Esterl, Qingsong Wen, Jochen L. Cremer
+![Affiliations](assets/affiliations.PNG){: style="float:left; height:60px;" }
+<div style="clear:both;"></div>
 
 ## Abstract
 We propose an end-to-end foundation model called OrderFusion, tailored for the intraday electricity market. 
@@ -32,7 +31,7 @@ We conduct extensive experiments and ablation studies on three key price indices
 ```bibtex
 @misc{yu2025OrderFusion,
   title         = {OrderFusion: Foundation Model for Probabilistic Intraday Electricity Price Forecasting Using Orderbook},
-  author        = {Yu, Runyao and Tao, Yuchen and Leimgruber, Fabian and Esterl, Tara and Cremer, Jochen L.},
+  author        = {Yu, Runyao and Tao, Yuchen and Leimgruber, Fabian and Esterl, Tara and Wen, Qingsong and Cremer, Jochen L.},
   year          = {2025},
   eprint        = {2502.06830},
   archivePrefix = {arXiv},

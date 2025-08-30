@@ -2,9 +2,10 @@
 Encoding Orderbook for End-to-End Probabilistic Forecasting of Intraday Electricity Price
 
 🌌 Summary page: https://runyao-yu.github.io/OrderFusion/
+
 🌃 Paper link: https://arxiv.org/pdf/2502.06830
 
-![Description of Image](Model/model_structure.PNG)
+![Description of Image](Figure/model_structure.PNG)
 
 
 ---

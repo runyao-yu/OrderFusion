@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <!-- Meta tags for social media banners, these should be filled in appropriatly as they are your "business card" -->
+  <!-- Replace the content tag with appropriate information -->
+  <meta name="description" content="DESCRIPTION META TAG">
+  <meta property="og:title" content="SOCIAL MEDIA TITLE TAG"/>
+  <meta property="og:description" content="SOCIAL MEDIA DESCRIPTION TAG TAG"/>
+  <meta property="og:url" content="URL OF THE WEBSITE"/>
+  <!-- Path to banner image, should be in the path listed below. Optimal dimenssions are 1200X630-->
+  <meta property="og:image" content="static/image/your_banner_image.png" />
+  <meta property="og:image:width" content="1200"/>
+  <meta property="og:image:height" content="630"/>
+
+
+  <meta name="twitter:title" content="TWITTER BANNER TITLE META TAG">
+  <meta name="twitter:description" content="TWITTER BANNER DESCRIPTION META TAG">
+  <!-- Path to banner image, should be in the path listed below. Optimal dimenssions are 1200X600-->
+  <meta name="twitter:image" content="static/images/your_twitter_banner_image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <!-- Keywords for your paper to be indexed by-->
+  <meta name="keywords" content="KEYWORDS SHOULD BE PLACED HERE">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+  <title>OrderFusion: Encoding Orderbook for End-to-End Probabilistic Forecasting of Intraday Electricity Price</title> <!-- 1 title-->
+  <link rel="icon" type="image/x-icon" href="static/images/delft_favicon.ico"> <!-- 2 icon-->
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+  rel="stylesheet">
+
+  <link rel="stylesheet" href="static/css/bulma.min.css">
+  <link rel="stylesheet" href="static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="static/css/index.css">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://documentcloud.adobe.com/view-sdk/main.js"></script>
+  <script defer src="static/js/fontawesome.all.min.js"></script>
+  <script src="static/js/bulma-carousel.min.js"></script>
+  <script src="static/js/bulma-slider.min.js"></script>
+  <script src="static/js/index.js"></script>
+</head>
+<body>
+
+  <!-- 3 authors-->
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <h1 class="title is-1 publication-title">OrderFusion: Encoding Orderbook for End-to-End Probabilistic Forecasting of Intraday Electricity Price</h1>
+            <!-- first line of authors -->
+            <div class="is-size-5 publication-authors">
+            <span class="author-block">
+              <a href="https://www.linkedin.com/in/runyao-yu/" target="_blank">Runyao Yu</a><sup>1,2</sup>,
+            </span>
+            <span class="author-block">
+              <a href="https://www.linkedin.com/in/yuchen-tao/" target="_blank">Yuchen Tao</a><sup>3</sup>,
+            </span>
+            <span class="author-block">
+              <a href="https://www.linkedin.com/in/fabian-leimgruber-a5a69963/" target="_blank">Fabian Leimgruber</a><sup>2</sup>,
+            </span>
+            <span class="author-block">
+              <a href="https://www.linkedin.com/in/tara-esterl-68026a1b/" target="_blank">Tara Esterl</a><sup>2</sup>,
+            </span>
+          </div>
+
+          <!-- second line of authors -->
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">
+              <a href="https://www.linkedin.com/in/qingsong-wen-22814156/" target="_blank">Qingsong Wen</a><sup>4</sup>,
+            </span>
+            <span class="author-block">
+              <a href="https://www.linkedin.com/in/jochen-cremer/" target="_blank">Jochen L. Cremer</a><sup>1,2</sup>,
+            </span>
+          </div>
+
+
+                  <div class="is-size-5 publication-authors">
+                  <span class="author-block"><sup>1</sup> Delft University of Technology</span><br>
+                  <span class="author-block"><sup>2</sup> Austrian Institute of Technology</span><br>
+                  <span class="author-block"><sup>3</sup> RWTH Aachen</span><br>
+                  <span class="author-block"><sup>4</sup> Squirrel Ai Learning</span><br>
+                  <span class="author-block">Preprint</span>
+                </div>
+
+
+                  <div class="column has-text-centered">
+                    <div class="publication-links">
+                
+                        <!-- 4 links-->
+
+                <!-- Github link -->
+                  <span class="link-block">
+                    <a href="https://github.com/runyao-yu/OrderFusion" target="_blank"
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fab fa-github"></i>
+                    </span>
+                    <span>Code</span>
+                  </a>
+                </span>
+
+                <!-- ArXiv abstract Link -->
+                <span class="link-block">
+                  <a href="https://arxiv.org/abs/2502.06830" target="_blank"
+                  class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                    <i class="ai ai-arxiv"></i>
+                  </span>
+                  <span>Paper</span>
+                </a>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- 6.5 Model image -->
+<section class="hero teaser">
+  <div class="container is-max-desktop">
+    <div class="hero-body has-text-centered">
+      <!-- Replace video with image -->
+      <img src="static/images/OrderFusion_Structure.PNG" alt="Teaser Image" style="width:100%; height:auto; max-height:500px; object-fit:cover;">
+
+      <h2 class="subtitle has-text-centered" style="margin-top:1rem;">
+        Structure of OrderFusion. 
+        Buy and sell inputs are iteratively fused to form the high-level representation of buy-sell interactions, which is then processed by the prediction head to generate quantile estimates, enabling end-to-end probabilistic forecasting.
+      </h2>
+    </div>
+  </div>
+</section>
+<!-- End teaser image -->
+
+
+
+
+<!-- 6 Paper abstract -->
+<section class="section hero is-light">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Probabilistic forecasting of intraday electricity prices is essential to manage market uncertainties. 
+            We propose an end-to-end forecasting model called OrderFusion. 
+            The backbone encodes the orderbook into a 2.5D representation and employs fusion layers to form rich representations of buy-sell interactions, avoiding handcrafted feature extraction and enabling parameter-efficient learning. 
+            The prediction head hierarchically estimates multiple quantiles through constrained residuals, eliminating the need to train separate models and overcoming quantile crossing. 
+            We conduct extensive experiments and ablation studies on widely used price indices (ID1, ID2, and ID3) using three years of orderbook in high-liquidity (German) and low-liquidity (Austrian) markets. 
+            The results confirm that OrderFusion remains end-to-end, parameter-efficient, and generalizable across different markets.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- End paper abstract -->
+
+
+
+
+
+<!-- 7. Image carousel -->
+<section class="hero is-small">
+  <div class="hero-body">
+    <div class="container">
+      <div id="results-carousel" class="carousel results-carousel">
+       <div class="item">
+        <!-- Your image here -->
+        <img src="static/images/Buy_Sell_Interactions.PNG" alt="MY ALT TEXT"/>
+        <h2 class="subtitle has-text-centered">
+          Visualization of buy-sell interactions for electricity delivery at 18:00 on 2024-07-23. 
+          Each circle represents a trade, with color indicating the side (buy or sell) and size proportional to the traded volume. 
+          Buyers adjust their bids based on information observed from sellers, while sellers respond based on bids submitted by buyers, reflecting strategic interactions. 
+          As the delivery time approaches, prices exhibit a downward trend, suggesting intensified buy-sell interactions. 
+        </h2>
+        </div>
+      <div class="item">
+        <!-- Your image here -->
+        <img src="static/images/Price_Indices.PNG" alt="MY ALT TEXT"/>
+        <h2 class="subtitle has-text-centered">
+          Visualization of price indices in the German market (2024). 
+          Each subfigure shows the 3D distribution of prices over time and hour of day. The second half of 2024 illustrates significant extreme price spikes, indicating challenging forecasting tasks. Overall, volatility follows the order: ID1 > ID2 > ID3.         
+          <b>a</b> ID1 displays frequent price spikes, reflecting last-minute trading under imbalance pressure. 
+          <b>b</b> ID2 reflects mid-session adjustments with slightly lower volatility. 
+          <b>c</b> ID3 corresponds to the most liquid trading window, exhibiting the least volatility and price spikes.
+          </h2>
+      </div>
+  </div>
+</div>
+</div>
+</section>
+<!-- End image carousel -->
+
+
+
+<!-- 8. Results carousel -->
+<section class="hero is-small">
+  <div class="hero-body">
+    <div class="container">
+      <div id="results-carousel" class="carousel results-carousel">
+       <div class="item">
+        <!-- Your image here -->
+        <img src="static/images/German_Market.PNG" alt="MY ALT TEXT"/>
+        <h2 class="subtitle has-text-centered">
+          Results in the German market.
+        </h2>
+        </div>
+      <div class="item">
+        <!-- Your image here -->
+        <img src="static/images/Austrian_Market.PNG" alt="MY ALT TEXT"/>
+        <h2 class="subtitle has-text-centered">
+          Results in the Austrian market.
+          </h2>
+      </div>
+  </div>
+</div>
+</div>
+</section>
+<!-- End image carousel -->
+
+
+
+
+<!--BibTex citation -->
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title">BibTeX</h2>
+    <p>If you use our code or find our paper useful, please cite:</p>
+    <pre><code>@misc{yu2025orderfusionencoding,
+      title={OrderFusion: Encoding Orderbook for End-to-End Probabilistic Forecasting of Intraday Electricity Price}, 
+      author={Runyao Yu and Yuchen Tao and Fabian Leimgruber and Tara Esterl and Qingsong Wen and Jochen L. Cremer},
+      year={2025},
+      eprint={2502.06830},
+      archivePrefix={arXiv},
+      primaryClass={q-fin.CP},
+      url={https://arxiv.org/abs/2502.06830}, 
+}
+</code></pre>
+  </div>
+</section>
+<!--End BibTex citation -->
+
+
+
+<footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content has-text-centered">
+          <p>
+            Template: <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank">Academic Project Page Template</a><br>
+            License: <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">CC BY-SA 4.0</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- Statcounter tracking code -->
+  
+<!-- You can add a tracker to track page visits by creating an account at statcounter.com -->
+<!-- End of Statcounter Code -->
+    <!-- End of Statcounter Code -->
+
+  </body>
+  </html>

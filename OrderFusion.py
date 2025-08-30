@@ -2,7 +2,6 @@ import os
 import gc
 import sys
 import joblib
-import time
 import math
 import numpy as np
 import pandas as pd
@@ -10,9 +9,12 @@ import random
 import warnings
 from tqdm import tqdm
 from itertools import combinations
+import time
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 import tensorflow as tf
-from tensorflow.keras.layers import MultiHeadAttention, Conv1D, GlobalAveragePooling1D, Dense, Input, Flatten, Add, Subtract, Lambda, Concatenate, Layer
+from tensorflow.keras.layers import MultiHeadAttention, GlobalAveragePooling1D, Dense, Input, Add, Subtract, Lambda, Layer
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.callbacks import LearningRateScheduler, ModelCheckpoint
 from tensorflow.keras.optimizers import Adam
@@ -29,6 +31,7 @@ print("TensorFlow version:", tf.__version__)
 print("NumPy version:", np.__version__)
 print("Pandas version:", pd.__version__)
 print("Scikit-learn version:", sklearn.__version__)
+
 
 '''
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -155,161 +158,6 @@ def merge_filtered_data(resolution, country):
 
     df = pd.concat([df_2022, df_2023, df_2024], ignore_index=True)
     df.to_pickle('Data/'+f"Filtered_{resolution}_{country}.pkl")
-
-
-'''
--- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
--- -- -- -- -- --   functions used for extracting features  -- -- -- -- -- -- --
--- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-'''
-
-
-def input_extraction(filtered_df):
-    filtered_df = filtered_df.sort_values('TransactionTime')
-    sum_volume = np.sum(filtered_df["VolumeTraded"])
-    
-    if sum_volume == 0:
-        return (0, np.nan, np.nan, np.nan, np.nan,
-                np.nan, np.nan, np.nan, np.nan, np.nan)
-    
-    else:
-        price_weighted_avg = np.average(filtered_df['Price'], weights=filtered_df['VolumeTraded'])
-        min_price = np.min(filtered_df['Price'])
-        max_price = np.max(filtered_df['Price'])
-        last_price = filtered_df['Price'].iloc[-1]
-        percentiles = np.percentile(filtered_df['Price'], [5, 25, 50, 75, 95])
-        return (sum_volume, price_weighted_avg, min_price, max_price, last_price,
-                *percentiles)
-
-
-def extract_features(df, indice):
-    data_per_file = []
-
-    if indice == 'ID1':
-        main_w = 60
-
-    elif indice == 'ID2':
-        main_w = 120
-
-    elif indice == 'ID3':
-        main_w = 180
-
-    else:
-        main_w = None
-        print('Wrong indice, only ID1, ID2, or ID3')
-    
-    sub_windows = ['full', 180, 60, 15, 5, 1]
-    total_groups = df['DeliveryStart'].nunique()
-
-    with tqdm(total=total_groups, desc="Processing groups", unit="group") as pbar:
-        for Date_DeliveryStart, group in df.groupby('DeliveryStart'):
-            pbar.set_postfix_str(f"Processing date: {Date_DeliveryStart}")
-            pbar.update(1)
-
-            SumV_dic = {}
-            VWAP_dic = {}
-            MinP_dic = {}
-            MaxP_dic = {}
-            LastP_dic = {}
-            P5_dic = {}
-            P25_dic = {}
-            P50_dic = {}
-            P75_dic = {}
-            P95_dic = {}
-
-            end_dt = Date_DeliveryStart - pd.Timedelta(minutes=main_w)
-            subwindow_values = {}
-
-            for i, sub_w in enumerate(sub_windows):
-                if sub_w == 'full':
-                    df_sub = group[group['TransactionTime'] <= end_dt]
-                else:
-                    start_dt = end_dt - pd.Timedelta(minutes=sub_w)
-                    df_sub = group[(group['TransactionTime'] >= start_dt) & (group['TransactionTime'] <= end_dt)]
-
-                values = input_extraction(df_sub)
-
-                if values[0] == 0:
-                    found_nonzero = False
-                    for bigger_sw in sub_windows[:i][::-1]:
-                        prev_vals = subwindow_values.get(bigger_sw, None)
-                        if prev_vals and prev_vals[0] != 0:
-                            values = prev_vals
-                            found_nonzero = True
-                            break
-
-                    if not found_nonzero:
-                        values = (0, np.nan, np.nan, np.nan, np.nan,
-                                    np.nan, np.nan, np.nan, np.nan, np.nan)
-
-                subwindow_values[sub_w] = values
-
-            for sub_w in sub_windows:
-                (sumv_val, vwap_val, minp_val, maxp_val, lastp_val,
-                    p5, p25, p50, p75, p95) = subwindow_values[sub_w]
-
-                if sub_w == 'full':
-                    prefix = 'full'
-                else:
-                    prefix = f'{sub_w}'
-
-                SumV_dic[f'SumV_{prefix}'] = sumv_val
-                VWAP_dic[f'VWAP_{prefix}'] = vwap_val
-                MinP_dic[f'MinP_{prefix}'] = minp_val
-                MaxP_dic[f'MaxP_{prefix}'] = maxp_val
-                LastP_dic[f'LastP_{prefix}'] = lastp_val
-                P5_dic[f'P5_{prefix}'] = p5
-                P25_dic[f'P25_{prefix}'] = p25
-                P50_dic[f'P50_{prefix}'] = p50
-                P75_dic[f'P75_{prefix}'] = p75
-                P95_dic[f'P95_{prefix}'] = p95
-
-            row_dict = {
-                'Date_DeliveryStart': Date_DeliveryStart,
-                **SumV_dic,
-                **VWAP_dic,
-                **MinP_dic,
-                **MaxP_dic,
-                **LastP_dic,
-                **P5_dic,
-                **P25_dic,
-                **P50_dic,
-                **P75_dic,
-                **P95_dic,
-            }
-            data_per_file.append(row_dict)
-
-    result_df = pd.DataFrame(data_per_file)
-    return result_df
-
-
-
-
-
-
-def execute_feature_extraction(resolution, country, indice, side=True):
-
-    # read data
-    df = pd.read_pickle('Data/'+f"Filtered_{resolution}_{country}.pkl")
-    df.reset_index(drop=True, inplace=True)
-    
-    # differentiate sides
-    if side==True:
-        # process buy side
-        df_buy = extract_features(df[df["Side"] == "BUY"], indice)
-        df_buy.to_pickle('Data/'+f"Feature_Buy_{resolution}_{country}_{indice}.pkl") 
-        del df_buy
-
-        # process sell side
-        df_sell = extract_features(df[df["Side"] == "SELL"], indice)
-        df_sell.to_pickle('Data/'+f"Feature_Sell_{resolution}_{country}_{indice}.pkl") 
-        del df_sell
-
-    # not differentiate sides
-    elif side==False:
-        df = extract_features(df, indice)
-        df.to_pickle('Data/'+f"Feature_{resolution}_{country}_{indice}.pkl") 
-        del df
 
 
 '''
@@ -584,6 +432,14 @@ def train_status(status):
     return pre_path
 
 
+def get_train_end_date(start_date: str, split_len: tuple[int, int, int]) -> dict:
+
+    start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+    train_end_dt = start_dt + relativedelta(months=split_len[0])
+
+    return train_end_dt.strftime("%Y-%m-%d")
+
+
 def read_data(save_path, country, resolution, indice):
 
     # Load labels
@@ -755,28 +611,6 @@ def quantile_loss(q, name):
     loss.__name__ = f'{name}_label'
     return loss
 
-
-def lr_schedule(epoch):
-
-    # Decay learning rate every 10 epochs
-    initial_lr = 7e-4
-    decay_factor = 0.95
-    decay_interval = 10
-    
-    num_decays = epoch // decay_interval
-    return initial_lr * (decay_factor ** num_decays)
-
-
-def lr_schedule(epoch):
-
-    # Decay learning rate every 10 epochs
-    initial_lr = 2e-3
-    decay_factor = 0.95
-    decay_interval = 10
-    
-    num_decays = epoch // decay_interval
-    return initial_lr * (decay_factor ** num_decays)
-
     
 def HierarchicalQuantileHeadQ50(shared_representation, quantiles):
 
@@ -866,37 +700,24 @@ class TemporalDecayMask(Layer):
         return tf.tile(mask_3d, [B, 1, 1])  # (B, T, 1)
 
 
-#-------
+def Fusion(input_buy, input_sell, hidden_dim, order, num_heads, mask_buy, mask_sell):
 
-
-def cross_attn_jump_fusion(input_buy, input_sell, mask_buy, mask_sell, hidden_dim, order):
-
-    # 1D Conv + mask
-    conv_b_init = Conv1D(hidden_dim, kernel_size=1, activation='swish')(input_buy)
-    conv_b_init = conv_b_init * mask_buy
-    conv_s_init = Conv1D(hidden_dim, kernel_size=1, activation='swish')(input_sell)
-    conv_s_init = conv_s_init * mask_sell
-
-    conv_b = conv_b_init
-    conv_s = conv_s_init
+    masked_cross_attn_b = input_buy
+    masked_cross_attn_s = input_sell
 
     for _ in range(order):
 
         # cross-attention + mask
-        cross_attn_b = MultiHeadAttention(num_heads=4, key_dim=hidden_dim // 4)(query=conv_b_init, key=conv_s, value=conv_s)
-        cross_attn_b = cross_attn_b * mask_buy
-        cross_attn_s = MultiHeadAttention(num_heads=4, key_dim=hidden_dim // 4)(query=conv_s_init, key=conv_b, value=conv_b)
-        cross_attn_s = cross_attn_s * mask_sell
+        cross_attn_b = MultiHeadAttention(num_heads=num_heads, key_dim=hidden_dim // num_heads)(query=masked_cross_attn_b,  key=masked_cross_attn_s, value=masked_cross_attn_s)
+        cross_attn_s = MultiHeadAttention(num_heads=num_heads, key_dim=hidden_dim // num_heads)(query=masked_cross_attn_s, key=masked_cross_attn_b, value=masked_cross_attn_b)
 
-        conv_b = Conv1D(hidden_dim, kernel_size=1, activation='swish')(cross_attn_b)
-        conv_b = conv_b * mask_buy
-        conv_s = Conv1D(hidden_dim, kernel_size=1, activation='swish')(cross_attn_s)
-        conv_s = conv_s * mask_sell
+        masked_cross_attn_b = cross_attn_b * mask_buy
+        masked_cross_attn_s = cross_attn_s * mask_sell
+        
+    return masked_cross_attn_b, masked_cross_attn_s
 
-    return conv_b, conv_s
-
-
-def OrderFusion(hidden_dim, num_block, input_shape, quantiles, decay_strength, pad_value=10000.0):
+    
+def OrderFusion(hidden_dim, max_degree, num_heads, input_shape, quantiles, decay_strength, pad_value=10000.0):
     model_input = Input(shape=input_shape, name='input')
     raw_buy  = model_input[..., 0]  # (B, T, F)
     raw_sell = model_input[..., 1]
@@ -918,14 +739,17 @@ def OrderFusion(hidden_dim, num_block, input_shape, quantiles, decay_strength, p
     buy_orders  = []
     sell_orders = []
 
-    for order in range(1, num_block + 1):
-        out_buy_k, out_sell_k = cross_attn_jump_fusion(out_buy, out_sell, mask_buy, mask_sell, hidden_dim, order=order)
+    for order in range(1, max_degree + 1):
+        out_buy_k, out_sell_k = Fusion(out_buy, out_sell, hidden_dim, order, num_heads, mask_buy, mask_sell)
         buy_orders.append(out_buy_k)
         sell_orders.append(out_sell_k)
 
     # Residual addition for all orders
-    out_buy  = Add(name=f"buy_residual_sum_order") (buy_orders)
-    out_sell = Add(name=f"sell_residual_sum_order")(sell_orders)
+    if buy_orders:
+        out_buy  = Add(name=f"buy_residual_sum_order") (buy_orders)
+
+    if sell_orders:
+        out_sell = Add(name=f"sell_residual_sum_order")(sell_orders)
 
     # Compute weighted average representation
     out_buy = GlobalAveragePooling1D()(out_buy)
@@ -937,73 +761,15 @@ def OrderFusion(hidden_dim, num_block, input_shape, quantiles, decay_strength, p
     return Model(inputs=model_input, outputs=outputs)
 
 
+def lr_schedule(epoch):
 
-def cross_attn_jump_fusion(input_buy, input_sell, mask_buy, mask_sell, hidden_dim, order):
-
-    conv_b = input_buy
-    conv_s = input_sell
-
-    for _ in range(order):
-
-        # cross-attention + mask
-        cross_attn_b = MultiHeadAttention(num_heads=4, key_dim=hidden_dim // 4)(query=input_buy, key=conv_s, value=conv_s)
-        cross_attn_b = cross_attn_b * mask_buy
-        cross_attn_s = MultiHeadAttention(num_heads=4, key_dim=hidden_dim // 4)(query=input_sell, key=conv_b, value=conv_b)
-        cross_attn_s = cross_attn_s * mask_sell
-
-        conv_b = Conv1D(hidden_dim, kernel_size=1, activation='swish')(cross_attn_b)
-        conv_b = conv_b * mask_buy
-        conv_s = Conv1D(hidden_dim, kernel_size=1, activation='swish')(cross_attn_s)
-        conv_s = conv_s * mask_sell
-
-    return conv_b, conv_s
-
-
-def OrderFusion(hidden_dim, num_block, input_shape, quantiles, decay_strength, pad_value=10000.0):
-    model_input = Input(shape=input_shape, name='input')
-    raw_buy  = model_input[..., 0]  # (B, T, F)
-    raw_sell = model_input[..., 1]
-
-    decay_mask = TemporalDecayMask(decay_strength)(raw_buy)  # or raw_sell, just to get the shape (B, T, 1)
-
-    binary_mask_buy  = TimeStepMask(pad_value)(raw_buy)      # shape (B, T, 1)
-    binary_mask_sell = TimeStepMask(pad_value)(raw_sell)     # shape (B, T, 1)
-
-    # element-wise mask multiplication
-    mask_buy  = binary_mask_buy  * decay_mask                # shape (B, T, 1)
-    mask_sell = binary_mask_sell * decay_mask                # shape (B, T, 1)
-
-    # broadcasted elementwise multiplication
-    out_buy  = raw_buy  * mask_buy
-    out_sell = raw_sell * mask_sell
-
-    # 1D Conv + mask
-    out_buy = Conv1D(hidden_dim, kernel_size=1, activation='swish')(out_buy)
-    out_buy = out_buy * mask_buy
-    out_sell = Conv1D(hidden_dim, kernel_size=1, activation='swish')(out_sell)
-    out_sell = out_sell * mask_sell
-
-    # Collect base + residuals in a list
-    buy_orders  = [out_buy]
-    sell_orders = [out_sell]
-
-    for order in range(1, num_block + 1):
-        out_buy_k, out_sell_k = cross_attn_jump_fusion(out_buy, out_sell, mask_buy, mask_sell, hidden_dim, order=order)
-        buy_orders.append(out_buy_k)
-        sell_orders.append(out_sell_k)
-
-    # Residual addition for all orders
-    out_buy  = Add(name=f"buy_residual_sum_order") (buy_orders)
-    out_sell = Add(name=f"sell_residual_sum_order")(sell_orders)
-
-    # Compute weighted average representation
-    out_buy = GlobalAveragePooling1D()(out_buy)
-    out_sell = GlobalAveragePooling1D()(out_sell)
-
-    rep = Add()([out_buy, out_sell])
-    outputs = HierarchicalQuantileHeadQ50(rep, quantiles)
-
-    return Model(inputs=model_input, outputs=outputs)
+    # Decay learning rate every 10 epochs
+    initial_lr = 4e-3
+    decay_factor = 0.95
+    decay_interval = 10
+    
+    num_decays = epoch // decay_interval
+    return initial_lr * (decay_factor ** num_decays)
 
 
 '''
@@ -1013,11 +779,11 @@ def OrderFusion(hidden_dim, num_block, input_shape, quantiles, decay_strength, p
 '''
 
 
-def select_model(target_model, hidden_dim, num_block, input_shape, quantiles, decay_strength):
+def select_model(target_model, hidden_dim, max_degree, num_heads, input_shape, quantiles, decay_strength):
 
     if target_model == 'OrderFusion':
-            model = OrderFusion(hidden_dim, num_block, input_shape, quantiles, decay_strength)
-    
+            model = OrderFusion(hidden_dim, max_degree, num_heads, input_shape, quantiles, decay_strength)
+
     else:
         raise ValueError(f"Unknown target_model: {target_model}")
 
@@ -1026,9 +792,9 @@ def select_model(target_model, hidden_dim, num_block, input_shape, quantiles, de
 
 def optimize_models(X_train, y_train, X_val, y_val, exp_setup):
 
-    hidden_dim, num_blocks, epoch, batch_size, save_path, target_model, quantiles, decay_strength, show_progress_bar = exp_setup
+    hidden_dim, max_degree, num_heads, epoch, batch_size, save_path, target_model, quantiles, decay_strength, show_progress_bar = exp_setup
     input_shape = (X_train.shape[1], X_train.shape[2], X_train.shape[3])
-    model = select_model(target_model, hidden_dim, num_blocks, input_shape, quantiles, decay_strength)
+    model = select_model(target_model, hidden_dim, max_degree, num_heads, input_shape, quantiles, decay_strength)
     
     # Generate y_train_dict and y_val_dict
     y_train_dict = {f'q{q:02}_label': y_train for q in quantiles}
@@ -1163,57 +929,59 @@ def test_performance(best_model, X_test, y_test, quantiles, save_path, country, 
 
 def execute_main(data_config, model_config):
     print("⛩️  Executing model training...")
-    countries, resolutions, indices, save_path, split_len, train_start_date = data_config
-    target_model, model_shapes, epoch, batch_size, points, quantiles, seeds, show_progress_bar = model_config
+    countries, resolutions, indices, save_path, split_lens, train_start_date = data_config
+    model_modes, model_shapes, epoch, batch_size, points, quantiles, seeds, show_progress_bar = model_config
 
     for country in countries: 
         for resolution in resolutions:
             for indice in indices:
                 results_df = []
-
-                # Read, split, and scale orderbook
-                orderbook_df = read_data(save_path, country, resolution, indice)
-                X_train, y_train, X_val, y_val, X_test, y_test = orderbook_split(orderbook_df, train_start_date, split_len, indice)
-                X_train, y_train, X_val, y_val, X_test, y_test = orderbook_scale(X_train, y_train, X_val, y_val, X_test, y_test, save_path, country, resolution)
-                X_train_buy, X_train_sell = X_train
-                X_val_buy, X_val_sell = X_val
-                X_test_buy, X_test_sell = X_test
-
-                for point in points:
+                for split_len in split_lens:
                     
-                    # Decay strength for the masking layer
-                    decay_strength = int(math.log2(point)) 
+                    # Read, split, and scale orderbook
+                    orderbook_df = read_data(save_path, country, resolution, indice)
+                    X_train, y_train, X_val, y_val, X_test, y_test = orderbook_split(orderbook_df, train_start_date, split_len, indice)
+                    X_train, y_train, X_val, y_val, X_test, y_test = orderbook_scale(X_train, y_train, X_val, y_val, X_test, y_test, save_path, country, resolution)
+                    X_train_buy, X_train_sell = X_train
+                    X_val_buy, X_val_sell = X_val
+                    X_test_buy, X_test_sell = X_test
 
-                    # Truncate and pad orderbook 
-                    X_train_buy_pad, X_train_sell_pad = pad_dataset(X_train_buy, X_train_sell, point)
-                    X_val_buy_pad, X_val_sell_pad = pad_dataset(X_val_buy, X_val_sell, point)
-                    X_test_buy_pad, X_test_sell_pad = pad_dataset(X_test_buy, X_test_sell, point)
-                    
-                    # Combine sides (bids and offers) 
-                    X_train_pack = pack_dual_input_to_4d(X_train_buy_pad, X_train_sell_pad)
-                    X_val_pack  = pack_dual_input_to_4d(X_val_buy_pad, X_val_sell_pad)
-                    X_test_pack  = pack_dual_input_to_4d(X_test_buy_pad, X_test_sell_pad)
-
-                    for model_shape in model_shapes:
+                    for point in points:
                         
-                        # Get model depth and width
-                        hidden_dim, num_block  = model_shape[0], model_shape[1]
+                        # Decay strength for the masking layer
+                        decay_strength = int(math.log2(point)) 
 
-                        for seed in seeds:
-                            set_random_seed(seed)
-                            print(f'{country, resolution, indice} | point={point} | {target_model} | model_shape: {model_shape} | seed: {seed}')
+                        # Truncate and pad orderbook 
+                        X_train_buy_pad, X_train_sell_pad = pad_dataset(X_train_buy, X_train_sell, point)
+                        X_val_buy_pad, X_val_sell_pad = pad_dataset(X_val_buy, X_val_sell, point)
+                        X_test_buy_pad, X_test_sell_pad = pad_dataset(X_test_buy, X_test_sell, point)
+                        
+                        # Combine sides (bids and offers) 
+                        X_train_pack = pack_dual_input_to_4d(X_train_buy_pad, X_train_sell_pad)
+                        X_val_pack  = pack_dual_input_to_4d(X_val_buy_pad, X_val_sell_pad)
+                        X_test_pack  = pack_dual_input_to_4d(X_test_buy_pad, X_test_sell_pad)
+
+                        for model_shape in model_shapes:
                             
-                            # Train, validate, and test model
-                            exp_setup = (hidden_dim, num_block, epoch, batch_size, save_path, target_model, [int(q * 100) for q in quantiles], decay_strength, show_progress_bar)
-                            best_model, hist_val, num_para = optimize_models(X_train_pack, y_train, X_val_pack, y_val, exp_setup)
-                            min_val_loss = min(hist_val["val_loss"])
-                            results = test_performance(best_model, X_test_pack, y_test, quantiles, save_path, country, resolution)
-                            results_df.append({
-                                'country': country, 'resolution': resolution, 'indice': indice, 'point': point, 'model_shape': model_shape, 'target_model': target_model, 'num_para': num_para, 'min_val_loss': min_val_loss, 'history': hist_val, 'seed': seed, 
-                                'avg_q_loss': results['avg_quantile_loss'],  'quantile_losses': results['quantile_losses'], 'quantile_crossing': results['quantile_crossing_rate'], 'rmse': results['median_quantile_rmse'], 'mae': results['median_quantile_mae'], 'r2': results['median_quantile_r2'], 'inference_time': results['inference_time'],
-                                'y_test_original': results['y_test_original'], 'y_pred_list': results['y_pred_list']})
+                            # Get model depth and width
+                            hidden_dim, max_degree, num_heads  = model_shape[0], model_shape[1], model_shape[2]
+                            
+                            for target_model in model_modes:
+                                for seed in seeds:
+                                    set_random_seed(seed)
+                                    print(f'{country, resolution, indice} | split={split_len} | point={point} | {target_model} | model_shape: {model_shape} | seed: {seed}')
+                                    
+                                    # Train, validate, and test model
+                                    exp_setup = (hidden_dim, max_degree, num_heads, epoch, batch_size, save_path, target_model, [int(q * 100) for q in quantiles], decay_strength, show_progress_bar)
+                                    best_model, hist_val, num_para = optimize_models(X_train_pack, y_train, X_val_pack, y_val, exp_setup)
+                                    min_val_loss = min(hist_val["val_loss"])
+                                    results = test_performance(best_model, X_test_pack, y_test, quantiles, save_path, country, resolution)
+                                    results_df.append({
+                                        'country': country, 'resolution': resolution, 'indice': indice, 'split_len': split_len, 'point': point, 'model_shape': model_shape, 'target_model': target_model, 'num_para': num_para, 'min_val_loss': min_val_loss, 'history': hist_val, 'seed': seed, 
+                                        'avg_q_loss': results['avg_quantile_loss'],  'quantile_losses': results['quantile_losses'], 'quantile_crossing': results['quantile_crossing_rate'], 'rmse': results['median_quantile_rmse'], 'mae': results['median_quantile_mae'], 'r2': results['median_quantile_r2'], 'inference_time': results['inference_time'],
+                                        'y_test_original': results['y_test_original'], 'y_pred_list': results['y_pred_list']})
 
                 results_df = pd.DataFrame(results_df)
-                results_df.to_pickle(f"{save_path}Result/{country}_{resolution}_{indice}_{target_model}.pkl")
-                results_df.to_csv(f"{save_path}Result/{country}_{resolution}_{indice}_{target_model}.csv")
+                results_df.to_pickle(f"{save_path}Result/{country}_{resolution}_{indice}.pkl")
+                results_df.to_csv(f"{save_path}Result/{country}_{resolution}_{indice}.csv")
     print("⛩️  Model training completed! 🎊🎉🎈")

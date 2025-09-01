@@ -65,6 +65,7 @@ To better understand how to use our codes:
 - Phase 2: `train`
 - Phase 3: `inference`
 
+
 ---
 
 
@@ -82,6 +83,7 @@ This project has been tested with the following environment:
 - `joblib`
 - `setuptools`
 - `tqdm`
+- `natsort`
 
 Use the following comment to pip install:
 

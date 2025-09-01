@@ -1,9 +1,9 @@
 # OrderFusion
 Encoding Orderbook for End-to-End Probabilistic Forecasting of Intraday Electricity Price
 
-🌌 Summary page: https://runyao-yu.github.io/OrderFusion/
+🦊 Summary page: https://runyao-yu.github.io/OrderFusion/
 
-🌃 Paper link: https://arxiv.org/pdf/2502.06830
+🌋 Paper link: https://arxiv.org/pdf/2502.06830
 
 ![Description of Image](Figure/model_structure.PNG)
 
@@ -27,10 +27,12 @@ The project directory is structured as follows:
                         |- Month (e.g. 03)
                         ...
                     ...
+    ├── Figure/
     ├── Model/
     ├── Result/
     ├── OrderFusion.py
     ├── Main.py
+    ├── Tutorial.ipynb
     ├── README.md
 
 The file `README.md` specifies the required package versions.
@@ -44,7 +46,7 @@ Anonymous Orders History” for Germany costs 325 EUR/month.)
 ### ✅ Step 2: Run the Pipeline
 
 Run `Main.py` to:
-- Process the orderbook data to generate intermediate data
+- Process the orderbook data
 - Train, validate, and test the OrderFusion model
 
 The script `OrderFusion.py` contains all necessary functions and classes.
@@ -54,7 +56,14 @@ The script `OrderFusion.py` contains all necessary functions and classes.
 After execution, check:
 - `Model/` for saved model weights  
 - `Result/` for evaluation metrics and outputs
+- `Figure/` for checking forecasts versus true price
 
+### ✅ Optional: Run the Tutorial.ipynb
+
+To better understand how to use our codes:
+- Phase 1: `prepare`
+- Phase 2: `train`
+- Phase 3: `inference`
 
 ---
 
@@ -77,5 +86,5 @@ This project has been tested with the following environment:
 Use the following comment to pip install:
 
 ```bash
-pip install numpy==1.25.2 pandas==2.1.4 scikit-learn==1.5.1 scipy==1.13.1 tensorflow==2.16.2 protobuf>=3.19.0 h5py>=3.1.0 joblib setuptools tqdm
+pip install numpy==1.25.2 pandas==2.1.4 scikit-learn==1.5.1 scipy==1.13.1 tensorflow==2.16.2 protobuf>=3.19.0 h5py>=3.1.0 joblib setuptools tqdm natsort
 

@@ -2,7 +2,7 @@ Data/*.pkl
 !Data/.gitkeep
 
 *.csv
-*.keras
 *.pdf
 *.svg
+*.png
 __pycache__

@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings("ignore")
+
 import os
 import gc
 import sys
@@ -6,12 +9,17 @@ import math
 import numpy as np
 import pandas as pd
 import random
-import warnings
+
 from tqdm import tqdm
 from itertools import combinations
 import time
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+import matplotlib.pyplot as plt
+import imageio.v3 as iio
+from natsort import natsorted
+from PIL import Image
+from IPython.display import clear_output
 
 import tensorflow as tf
 from tensorflow.keras.layers import MultiHeadAttention, GlobalAveragePooling1D, Dense, Input, Add, Subtract, Lambda, Layer
@@ -23,8 +31,6 @@ from tensorflow.keras.utils import custom_object_scope
 import sklearn
 from sklearn.preprocessing import RobustScaler
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-
-warnings.filterwarnings("ignore")
 
 print("Python version:", sys.version)
 print("TensorFlow version:", tf.__version__)
@@ -66,6 +72,7 @@ def add_traded_volume(df):
     
     return df
 
+
 def filter_raw_data(country, year):
     base_path = f"Data/{country}/Intraday Continuous/Orders"
     
@@ -90,7 +97,7 @@ def filter_raw_data(country, year):
     # Count the number of files for tqdm progress bar
     total_files = sum(len(files) for _, _, files in os.walk(path))
     
-    with tqdm(total=total_files, desc=f"processing {year} data for {country}", unit="file") as pbar:
+    with tqdm(total=total_files, desc=f"  processing {year} data for {country}", unit="file") as pbar:
         for dirname, _, filenames in os.walk(path):
             for filename in filenames:
                 data_path = os.path.join(dirname, filename)
@@ -139,26 +146,17 @@ def filter_raw_data(country, year):
     combined_qh_df.to_csv(f"Data/{year}_qh_{country}.csv", index=False)
 
 
-def merge_filtered_data(resolution, country):
+def merge_filtered_data(resolution, country, years):
+    dfs = []
+    for year in years:
+        df_year = pd.read_csv('Data/' + f"{year}_{resolution}_{country}.csv")
+        df_year.reset_index(drop=True, inplace=True)
+        df_year['DeliveryStart'] = pd.to_datetime(df_year['DeliveryStart'])
+        df_year['TransactionTime'] = pd.to_datetime(df_year['TransactionTime'])
+        dfs.append(df_year)
 
-    df_2022 = pd.read_csv('Data/'+f"2022_{resolution}_{country}.csv")
-    df_2022.reset_index(drop=True, inplace=True)
-    df_2022['DeliveryStart'] = pd.to_datetime(df_2022['DeliveryStart'])
-    df_2022['TransactionTime'] = pd.to_datetime(df_2022['TransactionTime'])
-
-    df_2023 = pd.read_csv('Data/'+f"2023_{resolution}_{country}.csv")
-    df_2023.reset_index(drop=True, inplace=True)
-    df_2023['DeliveryStart'] = pd.to_datetime(df_2023['DeliveryStart'])
-    df_2023['TransactionTime'] = pd.to_datetime(df_2023['TransactionTime'])
-
-    df_2024 = pd.read_csv('Data/'+f"2024_{resolution}_{country}.csv")
-    df_2024.reset_index(drop=True, inplace=True)
-    df_2024['DeliveryStart'] = pd.to_datetime(df_2024['DeliveryStart'])
-    df_2024['TransactionTime'] = pd.to_datetime(df_2024['TransactionTime'])
-
-    df = pd.concat([df_2022, df_2023, df_2024], ignore_index=True)
-    df.to_pickle('Data/'+f"Filtered_{resolution}_{country}.pkl")
-
+    df = pd.concat(dfs, ignore_index=True)
+    df.to_pickle('Data/' + f"Filtered_{resolution}_{country}.pkl")
 
 '''
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -184,7 +182,7 @@ def extract_sequences(df, indice, max_points=256):
         print('Wrong indice, only ID1, ID2, or ID3')
     
     total_groups = df['DeliveryStart'].nunique()
-    with tqdm(total=total_groups, desc="Extracting sequences", unit="group") as pbar:
+    with tqdm(total=total_groups, desc="  Extracting sequences", unit="group") as pbar:
         for Date_DeliveryStart, group in df.groupby('DeliveryStart'):
             pbar.set_postfix_str(f"Processing date: {Date_DeliveryStart}")
             pbar.update(1)
@@ -294,7 +292,7 @@ def extract_labels(df, country, indice):
 
     total_groups = df['DeliveryStart'].nunique()
 
-    with tqdm(total=total_groups, desc="Extracting labels", unit="group") as pbar:
+    with tqdm(total=total_groups, desc="  Extracting labels", unit="group") as pbar:
         for delivery_start, group in df.groupby('DeliveryStart'):
             pbar.update(1)
             label_row = {'Date_DeliveryStart': delivery_start}
@@ -358,7 +356,10 @@ def fit_and_save_price_scaler(country, resolution, train_start_date, train_end_d
     # Save the scaler
     scaler_path = os.path.join('Data/', f"robust_scaler_{country}_{resolution}.pkl")
     joblib.dump(scaler, scaler_path)
-    print(f"Scaler saved to {scaler_path}")
+    print(f"  Scaler saved to {scaler_path}")
+
+
+
 
 
 '''
@@ -369,44 +370,33 @@ def fit_and_save_price_scaler(country, resolution, train_start_date, train_end_d
 
 
 
-def processing_orderbook(countries, years, resolutions, indices, train_start_date, train_end_date):
-    print("[1]-[5] steps for orderbook processing 🏊🤽‍♀️🚣\n")
+def processing_orderbook(country, years, resolution, indice, train_start_date, train_end_date):
+    print("  [1]-[5] running steps for orderbook processing \n")
 
-    print("[1] filtering raw data 🌟")
-    for country in countries:
-        for year in years:
-            filter_raw_data(country, year)
-    print("🙌 finished! 🦄 \n")
+    print("  [1] filtering raw data 🌟")
+    for year in years:
+        filter_raw_data(country, year)
+    print("  🙌 finished! \n")
 
-    print("[2] merging filtered data 🌟🌟")
-    for country in countries:
-        for resolution in resolutions:
-            merge_filtered_data(resolution, country)
-    print("🙌 finished! 🦄 \n")
+    print("  [2] merging filtered data 🌟🌟")
+    merge_filtered_data(resolution, country, years)
+    print("  🙌 finished! \n")
 
-    print("[3] executing sequence extraction for OrderFusion 🌟🌟🌟")
+    print("  [3] executing sequence extraction for OrderFusion 🌟🌟🌟")
     side = True
-    for country in countries:
-        for resolution in resolutions:
-            for indice in indices:
-                execute_sequence_extraction(resolution, country, indice, side)
-    print("🙌 finished! 🦄 \n")
+    execute_sequence_extraction(resolution, country, indice, side)
+    print("  🙌 finished! \n")
 
-    print("[4] executing label extraction 🌟🌟🌟🌟")
+    print("  [4] executing label extraction 🌟🌟🌟🌟")
     side = False
-    for country in countries:
-        for resolution in resolutions:
-            for indice in indices:
-                execute_label_extraction(resolution, country, indice, side)
-    print("🙌 finished! 🦄 \n")
+    execute_label_extraction(resolution, country, indice, side)
+    print("  🙌 finished! \n")
 
-    print("[5] fitting and saving price scaler 🌟🌟🌟🌟🌟")
-    for country in countries:
-        for resolution in resolutions:
-            fit_and_save_price_scaler(country, resolution, train_start_date, train_end_date)
-    print("🙌 finished! 🦄 \n")
+    print("  [5] fitting and saving price scaler 🌟🌟🌟🌟🌟")
+    fit_and_save_price_scaler(country, resolution, train_start_date, train_end_date)
+    print("  🙌 finished! \n")
 
-    print("[1]-[5] steps finished! 🎊🎉🎈")
+    print("  [1]-[5] steps finished! \n")
 
 
 '''
@@ -700,7 +690,7 @@ class TemporalDecayMask(Layer):
         return tf.tile(mask_3d, [B, 1, 1])  # (B, T, 1)
 
 
-def Fusion(input_buy, input_sell, hidden_dim, order, num_heads, mask_buy, mask_sell):
+def Iter_Fusion(input_buy, input_sell, hidden_dim, order, num_heads, mask_buy, mask_sell):
 
     masked_cross_attn_b = input_buy
     masked_cross_attn_s = input_sell
@@ -740,7 +730,7 @@ def OrderFusion(hidden_dim, max_degree, num_heads, input_shape, quantiles, decay
     sell_orders = []
 
     for order in range(1, max_degree + 1):
-        out_buy_k, out_sell_k = Fusion(out_buy, out_sell, hidden_dim, order, num_heads, mask_buy, mask_sell)
+        out_buy_k, out_sell_k = Iter_Fusion(out_buy, out_sell, hidden_dim, order, num_heads, mask_buy, mask_sell)
         buy_orders.append(out_buy_k)
         sell_orders.append(out_sell_k)
 
@@ -792,7 +782,7 @@ def select_model(target_model, hidden_dim, max_degree, num_heads, input_shape, q
 
 def optimize_models(X_train, y_train, X_val, y_val, exp_setup):
 
-    hidden_dim, max_degree, num_heads, epoch, batch_size, save_path, target_model, quantiles, decay_strength, show_progress_bar = exp_setup
+    country, resolution, indice, hidden_dim, max_degree, num_heads, epoch, batch_size, save_path, target_model, quantiles, decay_strength, show_progress_bar = exp_setup
     input_shape = (X_train.shape[1], X_train.shape[2], X_train.shape[3])
     model = select_model(target_model, hidden_dim, max_degree, num_heads, input_shape, quantiles, decay_strength)
     
@@ -815,7 +805,7 @@ def optimize_models(X_train, y_train, X_val, y_val, exp_setup):
     print(f"paras: {model_paras_count}")
 
     # Validate model
-    checkpoint_path = os.path.join(f"{save_path}Model", f"{target_model}.keras")
+    checkpoint_path = os.path.join(f"{save_path}Model", f"{target_model}_{country}_{resolution}_{indice}.keras")
     checkpoint_callback = ModelCheckpoint(checkpoint_path,
                                           monitor='val_loss',
                                           save_freq="epoch",
@@ -927,61 +917,256 @@ def test_performance(best_model, X_test, y_test, quantiles, save_path, country, 
     return results
 
 
-def execute_main(data_config, model_config):
-    print("⛩️  Executing model training...")
-    countries, resolutions, indices, save_path, split_lens, train_start_date = data_config
-    model_modes, model_shapes, epoch, batch_size, points, quantiles, seeds, show_progress_bar = model_config
+def prepare_input_and_output(data_config, model_config):
 
-    for country in countries: 
-        for resolution in resolutions:
-            for indice in indices:
-                results_df = []
-                for split_len in split_lens:
-                    
-                    # Read, split, and scale orderbook
-                    orderbook_df = read_data(save_path, country, resolution, indice)
-                    X_train, y_train, X_val, y_val, X_test, y_test = orderbook_split(orderbook_df, train_start_date, split_len, indice)
-                    X_train, y_train, X_val, y_val, X_test, y_test = orderbook_scale(X_train, y_train, X_val, y_val, X_test, y_test, save_path, country, resolution)
-                    X_train_buy, X_train_sell = X_train
-                    X_val_buy, X_val_sell = X_val
-                    X_test_buy, X_test_sell = X_test
+    print("⛩️  Formatting input and output...")
+    country, resolution, indice, save_path, split_len, train_start_date, _ = data_config
+    _, _, _, _, num_trade, _, _, _ = model_config
+        
+    # Read, split, and scale orderbook
+    orderbook_df = read_data(save_path, country, resolution, indice)
+    X_train, y_train, X_val, y_val, X_test, y_test = orderbook_split(orderbook_df, train_start_date, split_len, indice)
+    X_train, y_train, X_val, y_val, X_test, y_test = orderbook_scale(X_train, y_train, X_val, y_val, X_test, y_test, save_path, country, resolution)
+    X_train_buy, X_train_sell = X_train
+    X_val_buy, X_val_sell = X_val
+    X_test_buy, X_test_sell = X_test
 
-                    for point in points:
-                        
-                        # Decay strength for the masking layer
-                        decay_strength = int(math.log2(point)) 
+    # Truncate and pad orderbook 
+    X_train_buy_pad, X_train_sell_pad = pad_dataset(X_train_buy, X_train_sell, num_trade)
+    X_val_buy_pad, X_val_sell_pad = pad_dataset(X_val_buy, X_val_sell, num_trade)
+    X_test_buy_pad, X_test_sell_pad = pad_dataset(X_test_buy, X_test_sell, num_trade)
+    
+    # Combine sides (buy and sell) 
+    X_train_pack = pack_dual_input_to_4d(X_train_buy_pad, X_train_sell_pad)
+    X_val_pack  = pack_dual_input_to_4d(X_val_buy_pad, X_val_sell_pad)
+    X_test_pack  = pack_dual_input_to_4d(X_test_buy_pad, X_test_sell_pad)
+    print("⛩️  Formatting input and output completed! 🎊🎉🎈")
 
-                        # Truncate and pad orderbook 
-                        X_train_buy_pad, X_train_sell_pad = pad_dataset(X_train_buy, X_train_sell, point)
-                        X_val_buy_pad, X_val_sell_pad = pad_dataset(X_val_buy, X_val_sell, point)
-                        X_test_buy_pad, X_test_sell_pad = pad_dataset(X_test_buy, X_test_sell, point)
-                        
-                        # Combine sides (bids and offers) 
-                        X_train_pack = pack_dual_input_to_4d(X_train_buy_pad, X_train_sell_pad)
-                        X_val_pack  = pack_dual_input_to_4d(X_val_buy_pad, X_val_sell_pad)
-                        X_test_pack  = pack_dual_input_to_4d(X_test_buy_pad, X_test_sell_pad)
+    return X_train_pack, X_val_pack, X_test_pack, y_train, y_val, y_test
 
-                        for model_shape in model_shapes:
-                            
-                            # Get model depth and width
-                            hidden_dim, max_degree, num_heads  = model_shape[0], model_shape[1], model_shape[2]
-                            
-                            for target_model in model_modes:
-                                for seed in seeds:
-                                    set_random_seed(seed)
-                                    print(f'{country, resolution, indice} | split={split_len} | point={point} | {target_model} | model_shape: {model_shape} | seed: {seed}')
-                                    
-                                    # Train, validate, and test model
-                                    exp_setup = (hidden_dim, max_degree, num_heads, epoch, batch_size, save_path, target_model, [int(q * 100) for q in quantiles], decay_strength, show_progress_bar)
-                                    best_model, hist_val, num_para = optimize_models(X_train_pack, y_train, X_val_pack, y_val, exp_setup)
-                                    min_val_loss = min(hist_val["val_loss"])
-                                    results = test_performance(best_model, X_test_pack, y_test, quantiles, save_path, country, resolution)
-                                    results_df.append({
-                                        'country': country, 'resolution': resolution, 'indice': indice, 'split_len': split_len, 'point': point, 'model_shape': model_shape, 'target_model': target_model, 'num_para': num_para, 'min_val_loss': min_val_loss, 'history': hist_val, 'seed': seed, 
-                                        'avg_q_loss': results['avg_quantile_loss'],  'quantile_losses': results['quantile_losses'], 'quantile_crossing': results['quantile_crossing_rate'], 'rmse': results['median_quantile_rmse'], 'mae': results['median_quantile_mae'], 'r2': results['median_quantile_r2'], 'inference_time': results['inference_time'],
-                                        'y_test_original': results['y_test_original'], 'y_pred_list': results['y_pred_list']})
 
-                results_df = pd.DataFrame(results_df)
-                results_df.to_pickle(f"{save_path}Result/{country}_{resolution}_{indice}.pkl")
-                results_df.to_csv(f"{save_path}Result/{country}_{resolution}_{indice}.csv")
-    print("⛩️  Model training completed! 🎊🎉🎈")
+def train_val_test_model(data_config, model_config, X_train_pack, X_val_pack, X_test_pack, y_train, y_val, y_test):
+    country, resolution, indice, save_path, _, _, _ = data_config
+    model_mode, model_shape, epoch, batch_size, num_trade, quantiles, seed, show_progress_bar = model_config
+
+    # Decay strength for the masking layer
+    decay_strength = int(math.log2(num_trade)) 
+
+    # Get model hyperparams
+    hidden_dim, max_degree, num_heads  = model_shape[0], model_shape[1], model_shape[2]
+
+    # Train, validate, and test model
+    set_random_seed(seed)
+    exp_setup = (country, resolution, indice, hidden_dim, max_degree, num_heads, epoch, batch_size, save_path, model_mode, [int(q * 100) for q in quantiles], decay_strength, show_progress_bar)
+    best_model, hist_val, _ = optimize_models(X_train_pack, y_train, X_val_pack, y_val, exp_setup)
+    _ = min(hist_val["val_loss"])
+
+    results = test_performance(best_model, X_test_pack, y_test, quantiles, save_path, country, resolution)
+    return results
+
+
+def load_best_model(quantiles, country, resolution, indice):
+    checkpoint_path = f"Model/OrderFusion_{country}_{resolution}_{indice}.keras"
+    quantiles = [int(q * 100) for q in quantiles]
+    quantiles_dict = {f'q{q:02}': q / 100 for q in quantiles}
+    custom_objects = {f'{name}_label': quantile_loss(q, name) for name, q in quantiles_dict.items()}
+
+    with custom_object_scope(custom_objects):
+        best_model = load_model(checkpoint_path, custom_objects=custom_objects)
+    return best_model
+
+
+def load_probabilistic_forecasts(best_model, save_path, X_test, y_test, quantiles, country, resolution):
+    # Load scaler
+    scaler_path = os.path.join(save_path, f"Data/robust_scaler_{country}_{resolution}.pkl")
+    scaler = joblib.load(scaler_path)
+    
+    # Sort quantiles and scale back the true prices
+    quantiles = sorted(quantiles)
+    y_test_original = scaler.inverse_transform(y_test.reshape(-1, 1)).ravel()
+
+    y_pred_scaled_list = best_model.predict(X_test)  # list/array of shape [n_quantiles, n_samples]
+
+    # Scale back each quantile prediction
+    y_pred_list = []
+    for i, q in enumerate(quantiles):
+        pred_rescaled = scaler.inverse_transform(y_pred_scaled_list[i].reshape(-1, 1)).ravel()
+        y_pred_list.append(pred_rescaled)
+    return y_pred_list, y_test_original
+
+
+def live_plot_sliding_window(y_pred_list, y_test_original, window_size, stop_index, indice):
+    
+    y_q10, y_q50, y_q90 = y_pred_list
+    N = len(y_test_original)
+    assert all(len(arr) == N for arr in [y_q10, y_q50, y_q90]), "Input arrays must have the same length"
+
+    
+    for i in range(N - window_size + 1):
+
+        if i + window_size > stop_index+1:
+            break
+
+        x = np.arange(i, i + window_size)
+
+        y_true_win = y_test_original[i:i + window_size]
+        y_q10_win = y_q10[i:i + window_size]
+        y_q50_win = y_q50[i:i + window_size]
+        y_q90_win = y_q90[i:i + window_size]
+
+        # Set dynamic y-limits with padding and determine 4 y-ticks
+        y_min, y_max = np.min([y_true_win, y_q10_win, y_q90_win]), np.max([y_true_win, y_q10_win, y_q90_win])
+        y_pad_min = y_min * 1.1 if y_min < 0 else y_min * 0.9
+        y_pad_max = y_max * 1.1 if y_max > 0 else y_max * 0.9
+        
+        # Plot
+        clear_output(wait=True)
+        fig, ax = plt.subplots(figsize=(3.6, 2.3))
+        plt.rcParams['font.family'] = 'Times New Roman'
+        plt.rcParams['font.size'] = 13
+
+        ax.plot(x, y_true_win, label="True", color="black", linewidth=1.1)
+        ax.plot(x, y_q50_win, label=r"Q$_{0.5}$", color="#F05D06", linewidth=1.1, alpha=0.9)
+        ax.fill_between(x, y_q10_win, y_q90_win, alpha=0.9, label=r"Q$_{0.1}$-Q$_{0.9}$", color="#6A6657", linewidth=1.1)
+
+                
+        ax.set_ylabel(f"ID$_{indice[-1]}$ (€/MWh)")
+        yticks = np.linspace(y_pad_min, y_pad_max, 4)
+        ax.set_yticks(yticks)
+        ax.set_ylim(yticks[0], yticks[-1])
+
+        ax.set_xlabel("Testing sample index")
+        xticks = np.linspace(np.min(x), np.max(x), 6)
+        ax.set_xticks(xticks)
+        ax.set_xlim(np.min(x), np.max(x))
+
+        ax.tick_params(axis='both', direction='out', width=1.1)
+
+        ax.spines['right'].set_visible(False)
+        ax.spines['top'].set_visible(False)
+        ax.spines['left'].set_linewidth(1.1)
+        ax.spines['bottom'].set_linewidth(1.1)
+
+        fig.legend(
+            loc="lower center",
+            ncol=3,
+            fontsize=11,
+            frameon=False,
+            bbox_to_anchor=(0.6, -0.07)
+        )
+        plt.tight_layout()
+        plt.savefig(f'Figure/{indice}/{indice}_{i}.png', dpi=300, bbox_inches='tight', transparent=True)
+        plt.show()
+        time.sleep(0.00001)  # Adjust for speed
+
+
+def create_gif_from_images(image_dir, output_path, prefix="", duration=0.01, size=None):
+    """
+    Create a GIF from images in a directory.
+
+    Args:
+        image_dir (str): Path to folder containing images.
+        output_path (str): Path to save the output GIF.
+        prefix (str): Optional filename prefix to filter (e.g., 'ID3_').
+        duration (float): Duration per frame in seconds.
+        size (tuple): Optional (width, height) to resize all frames to same size.
+    """
+    image_files = [os.path.join(image_dir, f) for f in os.listdir(image_dir)
+                   if f.endswith(".png") and f.startswith(prefix)]
+    image_files = natsorted(image_files)
+
+    if not image_files:
+        raise ValueError(f"No matching images in {image_dir} with prefix '{prefix}'")
+
+    frames = []
+    for img_path in image_files:
+        img = Image.open(img_path).convert("RGB")
+        if size:
+            img = img.resize(size, Image.LANCZOS)  # Resize to target size
+        frames.append(np.asarray(img)) # Convert to array
+
+    iio.imwrite(output_path, frames, format="gif", duration=duration)
+
+
+def gif_conversion(indice):
+    first_image = Image.open(f"Figure/{indice}/{indice}_0.png")
+    target_size = first_image.size  # e.g., (360, 230)
+
+    create_gif_from_images(
+        image_dir=f"Figure/{indice}",
+        output_path=f"Figure/{indice}_GIF.gif",
+        prefix=f"{indice}_",
+        duration=0.0005,
+        size=target_size  # 👈 Make all frames same size
+    )
+
+
+
+def execute_main(data_config, model_config, phase):
+    
+    country, resolution, indice, save_path, split_len, train_start_date, years = data_config
+    model_mode, model_shape, epoch, batch_size, num_trade, quantiles, seed, show_progress_bar = model_config
+
+    print(f'{country, resolution, indice} | split={split_len} | num_trade={num_trade} | {model_mode} | model_shape: {model_shape} | seed: {seed}')
+    
+    if phase == 'prepare':
+        print("⛩️  Preparing input and output...")
+        processing_orderbook(country, years, resolution, indice, train_start_date, get_train_end_date(train_start_date, split_len))
+        print("⛩️  Preparing finished! 🎊🎉🎈")
+
+    elif phase == 'train':
+        print("⛩️  Executing model training...")
+        X_train_pack, X_val_pack, X_test_pack, y_train, y_val, y_test = prepare_input_and_output(data_config, model_config)
+        results = train_val_test_model(data_config, model_config, X_train_pack, X_val_pack, X_test_pack, y_train, y_val, y_test)
+        results_df = []
+        results_df.append({
+            'country': country, 'resolution': resolution, 'indice': indice, 'split_len': split_len, 
+            'num_trade': num_trade, 'model_shape': model_shape, 'model_mode': model_mode, 'seed': seed, 
+            'AQL': results['avg_quantile_loss'],  'Qs': results['quantile_losses'], 'AQCR': results['quantile_crossing_rate'], 
+            'RMSE': results['median_quantile_rmse'], 'MAE': results['median_quantile_mae'], 'R2': results['median_quantile_r2'], 
+            'inference_time': results['inference_time'], 'y_test_original': results['y_test_original'], 'y_pred_list': results['y_pred_list']})
+
+        results_df = pd.DataFrame(results_df)
+        results_df.to_pickle(f"{save_path}Result/{country}_{resolution}_{indice}.pkl")
+        results_df.to_csv(f"{save_path}Result/{country}_{resolution}_{indice}.csv")
+        print("⛩️  Model training finished! 🎊🎉🎈")
+    
+    elif phase == 'inference':
+        print("⛩️  Executing inference...")
+        X_train_pack, X_val_pack, X_test_pack, y_train, y_val, y_test = prepare_input_and_output(data_config, model_config)
+        best_model = load_best_model(quantiles, country, resolution, indice)
+        y_pred_list, y_test_original = load_probabilistic_forecasts(best_model, save_path, X_test_pack, y_test, quantiles, country, resolution)
+        live_plot_sliding_window(y_pred_list, y_test_original, 181, 400, indice)
+        gif_conversion(indice)
+        print("⛩️  Inference finished! 🎊🎉🎈")
+
+    elif phase == 'all':
+        print("⛩️  Executing all phases...")
+        print("⛩️  Preparing input and output...")
+        processing_orderbook(country, years, resolution, indice, train_start_date, get_train_end_date(train_start_date, split_len))
+        print("⛩️  Preparing finished! 🎊🎉🎈")
+
+        print("⛩️  Executing model training...")
+        results = train_val_test_model(data_config, model_config, X_train_pack, X_val_pack, X_test_pack, y_train, y_val, y_test)
+        results_df = []
+        results_df.append({
+            'country': country, 'resolution': resolution, 'indice': indice, 'split_len': split_len, 
+            'num_trade': num_trade, 'model_shape': model_shape, 'model_mode': model_mode, 'seed': seed, 
+            'AQL': results['avg_quantile_loss'],  'Qs': results['quantile_losses'], 'AQCR': results['quantile_crossing_rate'], 
+            'RMSE': results['median_quantile_rmse'], 'MAE': results['median_quantile_mae'], 'R2': results['median_quantile_r2'], 
+            'inference_time': results['inference_time'], 'y_test_original': results['y_test_original'], 'y_pred_list': results['y_pred_list']})
+
+        results_df = pd.DataFrame(results_df)
+        results_df.to_pickle(f"{save_path}Result/{country}_{resolution}_{indice}.pkl")
+        results_df.to_csv(f"{save_path}Result/{country}_{resolution}_{indice}.csv")
+        print("⛩️  Model training finished! 🎊🎉🎈")
+
+        print("⛩️  Executing inference...")
+        best_model = load_best_model(quantiles, country, resolution, indice)
+        y_pred_list, y_test_original = load_probabilistic_forecasts(best_model, save_path, X_test_pack, y_test, quantiles, country, resolution)
+        live_plot_sliding_window(y_pred_list, y_test_original, 181, 400, indice)
+        gif_conversion(indice)
+        print("⛩️  Inference finished! 🎊🎉🎈")
+
+    else:
+        raise ValueError(f"Unknown phase: {phase}")

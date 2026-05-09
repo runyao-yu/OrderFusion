@@ -4,5 +4,4 @@ Data/*.pkl
 *.csv
 *.pdf
 *.svg
-*.png
 __pycache__

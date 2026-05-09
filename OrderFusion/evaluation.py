@@ -97,6 +97,53 @@ def compute_interval_metrics(y_true, y_pred_array, quantiles):
     return results
 
 
+def compute_interval_metrics(y_true, y_pred_array, quantiles):
+    """
+    Compute mean width and coverage for each symmetric quantile interval,
+    plus Average Interval Coverage Error (AICE) and (optional) % version.
+
+    y_true:       (n_samples,)
+    y_pred_array: (n_samples, n_quantiles)
+    quantiles:    sorted list of quantile levels
+    """
+    results = {}
+    widths, coverages = [], []
+    cov_errors = []
+
+    for low_q in quantiles:
+        high_q = 1 - low_q
+        if low_q < 0.5 and high_q in quantiles:
+            i_low = quantiles.index(low_q)
+            i_high = quantiles.index(high_q)
+
+            y_low = y_pred_array[:, i_low]
+            y_high = y_pred_array[:, i_high]
+
+            width = np.mean(y_high - y_low)
+            coverage = np.mean((y_true >= y_low) & (y_true <= y_high))  # in [0,1]
+            nominal = high_q - low_q                                    # e.g. 0.9-0.1 = 0.8
+            cov_err = abs(coverage - nominal)
+
+            results[f"Width_{low_q:.2f}-{high_q:.2f}"] = float(width)
+            results[f"Coverage_{low_q:.2f}-{high_q:.2f}_%"] = float(coverage * 100)
+            results[f"CovErr_{low_q:.2f}-{high_q:.2f}"] = float(cov_err)
+
+            widths.append(width)
+            coverages.append(coverage)
+            cov_errors.append(cov_err)
+
+    results["AvgIntervalWidth"] = float(np.mean(widths)) if widths else np.nan
+    results["AvgCoverageRate_%"] = float(np.mean(coverages) * 100) if coverages else np.nan
+
+    # average absolute deviation from nominal interval coverage
+    results["AvgIntervalCoverageError"] = float(np.mean(cov_errors)) if cov_errors else np.nan
+    results["AvgIntervalCoverageError_%"] = float(np.mean(cov_errors) * 100) if cov_errors else np.nan
+
+    return results
+
+
+
+
 def evaluate_model(best_model, X_test, y_test, quantiles, save_path, country, resolution):
 
     # Load scaler
@@ -126,12 +173,14 @@ def evaluate_model(best_model, X_test, y_test, quantiles, save_path, country, re
     rmse_median, mae_median, r2_median = compute_regression_metrics(y_test_original, median_predictions)
     y_pred_array = np.column_stack(y_pred_list)
     crossing_rate = compute_quantile_crossing_rate(y_pred_array)
+    interval_metrics = compute_interval_metrics(y_test_original, y_pred_array, quantiles)
 
     # Prepare results
     results = {
         'quantile_losses': quantile_losses,            
         'avg_quantile_loss': round(avg_quant_loss, 2), 
         'quantile_crossing_rate': round(crossing_rate * 100, 2),
+        'coverage_error': interval_metrics['AvgIntervalCoverageError_%'],
         'median_quantile_rmse': round(rmse_median, 2),
         'median_quantile_mae': round(mae_median, 2),
         'median_quantile_r2': round(r2_median, 2),
@@ -139,11 +188,20 @@ def evaluate_model(best_model, X_test, y_test, quantiles, save_path, country, re
         'y_test_original': y_test_original,
         'y_pred_list': y_pred_list}
 
-    interval_metrics = compute_interval_metrics(y_test_original, y_pred_array, quantiles)
+    
     results.update(interval_metrics)
 
-    print(f"AQL: {results['avg_quantile_loss']}, AQCR: {results['quantile_crossing_rate']}, AIW: {results['AvgIntervalWidth']}, AICR: {results['AvgCoverageRate_%']}, RMSE: {results['median_quantile_rmse']}, MAE: {results['median_quantile_mae']}, R2: {results['median_quantile_r2']}, Inference time: {inference_time}s \n")
-    
+    print(
+        f"AQL: {results['avg_quantile_loss']}, "
+        f"AQCR: {results['quantile_crossing_rate']}, "
+        f"AQCE: {results['AvgIntervalCoverageError_%']}, "
+        f"AIW: {results['AvgIntervalWidth']}, "
+        f"RMSE: {results['median_quantile_rmse']}, "
+        f"MAE: {results['median_quantile_mae']}, "
+        f"R2: {results['median_quantile_r2']}, "
+        f"Inference time: {inference_time}s \n"
+    )
+
     return results
 
 

@@ -12,6 +12,29 @@ Encoding Orderbook for End-to-End Probabilistic Intraday Electricity Price Forec
 
 ---
 
+## 📢 News
+
+🚀 **Stay tuned! We are developing OrderFusion+ — the next-generation version of OrderFusion (OrderFusion v2).**
+
+OrderFusion+ extends the original framework from price-index forecasting to **price-trajectory forecasting**, while incorporating richer market information, including neighboring products, fundamental features, and calendar features.
+
+🌐 OrderFusion+ repository *(coming soon)*: [github.com/runyao-yu/OrderFusion-Plus](https://github.com/runyao-yu/OrderFusion-Plus)
+
+| Capability | OrderFusion | OrderFusion+ |
+| :--- | :---: | :---: |
+| **Forecasting paradigm** |  |  |
+| Pointwise forecasting | ✓ | ✓ |
+| Probabilistic forecasting | ✓ | ✓ |
+| **Forecasting target** |  |  |
+| Price index forecasting | ✓ | ✓ |
+| Price trajectory forecasting | ✗ | ✓ |
+| **Input information** |  |  |
+| Orderbook data input | ✓ | ✓ |
+| Neighboring product input | ✗ | ✓ |
+| Fundamental feature input | ✗ | ✓ |
+| Calendar feature input | ✗ | ✓ |
+
+---
 
 ## 🚀 Quick Start
  

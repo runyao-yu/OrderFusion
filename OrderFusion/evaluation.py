@@ -142,8 +142,6 @@ def compute_interval_metrics(y_true, y_pred_array, quantiles):
     return results
 
 
-
-
 def evaluate_model(best_model, X_test, y_test, quantiles, save_path, country, resolution):
 
     # Load scaler
@@ -244,6 +242,41 @@ def get_forecasts(best_model, save_path, X_test, y_test, quantiles, country, res
     return y_pred_list, y_test_original
 
 
+
+
+def create_gif_from_images(image_dir, output_path, prefix="", duration=0.01, size=None):
+
+    image_files = [os.path.join(image_dir, f) for f in os.listdir(image_dir)
+                   if f.endswith(".png") and f.startswith(prefix)]
+    image_files = natsorted(image_files)
+
+    if not image_files:
+        raise ValueError(f"No matching images in {image_dir} with prefix '{prefix}'")
+
+    frames = []
+    for img_path in image_files:
+        img = Image.open(img_path).convert("RGB")
+        if size:
+            img = img.resize(size, Image.LANCZOS)  # resize to target size
+        frames.append(np.asarray(img)) 
+
+    iio.imwrite(output_path, frames, format="gif", duration=duration)
+
+
+def gif_conversion(indice):
+    first_image = Image.open(f"Figure/{indice}/{indice}_0.png")
+    target_size = first_image.size 
+
+    create_gif_from_images(
+        image_dir=f"Figure/{indice}",
+        output_path=f"Figure/{indice}_GIF.gif",
+        prefix=f"{indice}_",
+        duration=0.0005,
+        size=target_size 
+    )
+
+
+
 def plot_forecasts(y_pred_list, y_test_original, window_size, stop_index, indice):
     
     y_q10, y_q50, y_q90 = y_pred_list
@@ -308,34 +341,3 @@ def plot_forecasts(y_pred_list, y_test_original, window_size, stop_index, indice
         plt.show()
         time.sleep(0.00001)  
 
-
-def create_gif_from_images(image_dir, output_path, prefix="", duration=0.01, size=None):
-
-    image_files = [os.path.join(image_dir, f) for f in os.listdir(image_dir)
-                   if f.endswith(".png") and f.startswith(prefix)]
-    image_files = natsorted(image_files)
-
-    if not image_files:
-        raise ValueError(f"No matching images in {image_dir} with prefix '{prefix}'")
-
-    frames = []
-    for img_path in image_files:
-        img = Image.open(img_path).convert("RGB")
-        if size:
-            img = img.resize(size, Image.LANCZOS)  # resize to target size
-        frames.append(np.asarray(img)) 
-
-    iio.imwrite(output_path, frames, format="gif", duration=duration)
-
-
-def gif_conversion(indice):
-    first_image = Image.open(f"Figure/{indice}/{indice}_0.png")
-    target_size = first_image.size 
-
-    create_gif_from_images(
-        image_dir=f"Figure/{indice}",
-        output_path=f"Figure/{indice}_GIF.gif",
-        prefix=f"{indice}_",
-        duration=0.0005,
-        size=target_size 
-    )

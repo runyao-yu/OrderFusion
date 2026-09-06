@@ -468,47 +468,6 @@ def split_data(orderbook_df, output_col, train_start, train_end, val_start, val_
     return (X_train_buy, X_train_sell), y_train, (X_val_buy, X_val_sell), y_val, (X_test_buy, X_test_sell), y_test
 
 
-def scale_data(X_train, y_train, X_val, y_val, X_test, y_test, save_path, country, resolution):
-
-    # Unpack buy and sell
-    X_train_buy, X_train_sell = X_train
-    X_val_buy, X_val_sell = X_val
-    X_test_buy, X_test_sell = X_test
-
-    # Stack all sequences together for global fitting
-    flat_train = np.vstack(X_train_buy + X_train_sell)
-    
-    # Fit shared scaler over all 3 features: price, volume, Δt
-    x_scaler = RobustScaler()
-    x_scaler.fit(flat_train)
-
-
-    def transform_sequences(X, scaler):
-        return [scaler.transform(seq) for seq in X]
-
-    # Perform scaling
-    X_train_buy_scaled = transform_sequences(X_train_buy, x_scaler)
-    X_train_sell_scaled = transform_sequences(X_train_sell, x_scaler)
-
-    X_val_buy_scaled = transform_sequences(X_val_buy, x_scaler)
-    X_val_sell_scaled = transform_sequences(X_val_sell, x_scaler)
-
-    X_test_buy_scaled = transform_sequences(X_test_buy, x_scaler)
-    X_test_sell_scaled = transform_sequences(X_test_sell, x_scaler)
-
-    # Load the fitted RobustScaler
-    scaler_path = os.path.join(save_path, f"Data/scaler_{country}_{resolution}.pkl")
-    scaler = joblib.load(scaler_path)
-
-    y_train_scaled = scaler.fit_transform(np.array(y_train).reshape(-1, 1)).ravel()
-    y_val_scaled = scaler.transform(np.array(y_val).reshape(-1, 1)).ravel()
-    y_test_scaled = scaler.transform(np.array(y_test).reshape(-1, 1)).ravel()
-
-    X_train_scaled = (X_train_buy_scaled, X_train_sell_scaled)
-    X_val_scaled = (X_val_buy_scaled, X_val_sell_scaled)
-    X_test_scaled = (X_test_buy_scaled, X_test_sell_scaled)
-
-    return X_train_scaled, y_train_scaled, X_val_scaled, y_val_scaled, X_test_scaled, y_test_scaled
 
 
 def pad_sequence(seq, def_len, pad_value):
@@ -560,3 +519,46 @@ def pad_data(X_train, X_val, X_test, num_trade, pad_value):
     X_test = pack_dual_input_to_4d(X_test_buy_pad, X_test_sell_pad)
 
     return X_train, X_val, X_test
+
+
+def scale_data(X_train, y_train, X_val, y_val, X_test, y_test, save_path, country, resolution):
+
+    # Unpack buy and sell
+    X_train_buy, X_train_sell = X_train
+    X_val_buy, X_val_sell = X_val
+    X_test_buy, X_test_sell = X_test
+
+    # Stack all sequences together for global fitting
+    flat_train = np.vstack(X_train_buy + X_train_sell)
+    
+    # Fit shared scaler over all 3 features: price, volume, Δt
+    x_scaler = RobustScaler()
+    x_scaler.fit(flat_train)
+
+
+    def transform_sequences(X, scaler):
+        return [scaler.transform(seq) for seq in X]
+
+    # Perform scaling
+    X_train_buy_scaled = transform_sequences(X_train_buy, x_scaler)
+    X_train_sell_scaled = transform_sequences(X_train_sell, x_scaler)
+
+    X_val_buy_scaled = transform_sequences(X_val_buy, x_scaler)
+    X_val_sell_scaled = transform_sequences(X_val_sell, x_scaler)
+
+    X_test_buy_scaled = transform_sequences(X_test_buy, x_scaler)
+    X_test_sell_scaled = transform_sequences(X_test_sell, x_scaler)
+
+    # Load the fitted RobustScaler
+    scaler_path = os.path.join(save_path, f"Data/scaler_{country}_{resolution}.pkl")
+    scaler = joblib.load(scaler_path)
+
+    y_train_scaled = scaler.transform(np.array(y_train).reshape(-1, 1)).ravel()
+    y_val_scaled = scaler.transform(np.array(y_val).reshape(-1, 1)).ravel()
+    y_test_scaled = scaler.transform(np.array(y_test).reshape(-1, 1)).ravel()
+
+    X_train_scaled = (X_train_buy_scaled, X_train_sell_scaled)
+    X_val_scaled = (X_val_buy_scaled, X_val_sell_scaled)
+    X_test_scaled = (X_test_buy_scaled, X_test_sell_scaled)
+
+    return X_train_scaled, y_train_scaled, X_val_scaled, y_val_scaled, X_test_scaled, y_test_scaled

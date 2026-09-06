@@ -23,15 +23,12 @@ OrderFusion+ extends the original framework from price-index forecasting to **pr
 | Capability | OrderFusion | OrderFusion+ |
 | :--- | :---: | :---: |
 | 🟧 **Forecasting paradigm** |  |  |
-| — | — | — |
 | Pointwise forecasting | ✓ | ✓ |
 | Probabilistic forecasting | ✓ | ✓ |
 | 🟧 **Forecasting target** |  |  |
-| — | — | — |
 | Price index forecasting | ✓ | ✓ |
 | Price trajectory forecasting | ✗ | ✓ |
 | 🟧 **Input information** |  |  |
-| — | — | — |
 | Orderbook data input | ✓ | ✓ |
 | Neighboring product input | ✗ | ✓ |
 | Fundamental feature input | ✗ | ✓ |

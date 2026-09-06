@@ -1,8 +1,8 @@
 import os
-import joblib
 import time
 import numpy as np
 from itertools import combinations
+from sklearn.preprocessing import RobustScaler
 
 import matplotlib.pyplot as plt
 import imageio.v3 as iio
@@ -145,8 +145,10 @@ def compute_interval_metrics(y_true, y_pred_array, quantiles):
 def evaluate_model(best_model, X_test, y_test, quantiles, save_path, country, resolution):
 
     # Load scaler
-    scaler_path = os.path.join(save_path, f"Data/scaler_{country}_{resolution}.pkl")
-    scaler = joblib.load(scaler_path)
+    scaler_path = os.path.join(save_path, f"Data/scaler_{country}_{resolution}.npz")
+    scaler_params = np.load(scaler_path, allow_pickle=False)
+    scaler = RobustScaler()
+    scaler.center_, scaler.scale_ = scaler_params['center'], scaler_params['scale']
     
     # Sort quantiles and scale back the true prices
     quantiles = sorted(quantiles)
@@ -225,8 +227,10 @@ def load_best_model(quantiles, country, resolution, indice, save_path):
 
 def get_forecasts(best_model, save_path, X_test, y_test, quantiles, country, resolution):
     # Load scaler
-    scaler_path = os.path.join(save_path, f"Data/scaler_{country}_{resolution}.pkl")
-    scaler = joblib.load(scaler_path)
+    scaler_path = os.path.join(save_path, f"Data/scaler_{country}_{resolution}.npz")
+    scaler_params = np.load(scaler_path, allow_pickle=False)
+    scaler = RobustScaler()
+    scaler.center_, scaler.scale_ = scaler_params['center'], scaler_params['scale']
     
     # Sort quantiles and scale back the true prices
     quantiles = sorted(quantiles)

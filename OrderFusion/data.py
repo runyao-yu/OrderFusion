@@ -1,5 +1,4 @@
 import os
-import joblib
 import glob
 import numpy as np
 import pandas as pd
@@ -385,9 +384,9 @@ def get_scaler(country, resolution, train_start_date, train_end_date):
     scaler = RobustScaler()
     scaler.fit(df_train[['Price']].values)
 
-    # Save the scaler
-    scaler_path = os.path.join('Data/', f"scaler_{country}_{resolution}.pkl")
-    joblib.dump(scaler, scaler_path)
+    # Save only the fitted numeric parameters (avoids pickle-based RCE from joblib.dump/load)
+    scaler_path = os.path.join('Data/', f"scaler_{country}_{resolution}.npz")
+    np.savez(scaler_path, center=scaler.center_, scale=scaler.scale_)
     print(f"  Scaler saved to {scaler_path}")
 
 
@@ -546,8 +545,10 @@ def scale_data(X_train, y_train, X_val, y_val, X_test, y_test, save_path, countr
     X_test_sell_scaled = transform_sequences(X_test_sell, x_scaler)
 
     # Load the fitted RobustScaler
-    scaler_path = os.path.join(save_path, f"Data/scaler_{country}_{resolution}.pkl")
-    scaler = joblib.load(scaler_path)
+    scaler_path = os.path.join(save_path, f"Data/scaler_{country}_{resolution}.npz")
+    scaler_params = np.load(scaler_path, allow_pickle=False)
+    scaler = RobustScaler()
+    scaler.center_, scaler.scale_ = scaler_params['center'], scaler_params['scale']
 
     y_train_scaled = scaler.transform(np.array(y_train).reshape(-1, 1)).ravel()
     y_val_scaled = scaler.transform(np.array(y_val).reshape(-1, 1)).ravel()

@@ -219,18 +219,16 @@ def merge_data(resolution, country):
     df.to_pickle(os.path.join('Data', f"processed_{resolution}_{country}.pkl"))
 
 
+# ------------------------------------------------------------------------------------------------
 def extract_sequence(df, indice, max_points=256):
     all_data = []
 
     if indice == 'ID1':
         cutoff_minutes = 60
-
     elif indice == 'ID2':
         cutoff_minutes = 120
-
     elif indice == 'ID3':
         cutoff_minutes = 180
-
     else:
         cutoff_minutes = None
         print('Wrong indice, only ID1, ID2, or ID3')
@@ -246,9 +244,7 @@ def extract_sequence(df, indice, max_points=256):
 
             if filtered.empty:
                 continue
-
             filtered = filtered.sort_values('TransactionTime')
-
             # Extract sum of volume and number of matched trades
             sum_volume = np.sum(filtered['VolumeTraded'])
             num_trades = len(filtered)
@@ -260,7 +256,6 @@ def extract_sequence(df, indice, max_points=256):
             filtered['TimeDiffSec'] = (Date_DeliveryStart - filtered['TransactionTime']).dt.total_seconds()
             sequence = filtered[['Price', 'VolumeTraded', 'TimeDiffSec']].values.tolist()
 
-            
             all_data.append({
                 'Date_DeliveryStart': Date_DeliveryStart,
                 'Sequence': sequence,
@@ -309,6 +304,7 @@ def output_extraction(filtered_df):
         return price_weighted_avg, sum_volume, num_trades
 
 
+# ------------------------------------------------------------------------------------------------
 def extract_label(df, country, indice):
     data_per_file = []
 

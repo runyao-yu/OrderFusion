@@ -1,9 +1,11 @@
 # OrderFusion
 Encoding Orderbook for End-to-End Probabilistic Intraday Electricity Price Forecasting
 
+**Accepted to Advanced Engineering Informatics 2026 (IF=11.5)**.
+
 🦊 Summary page: https://runyao-yu.github.io/OrderFusion/
 
-🌋 Paper link: https://arxiv.org/pdf/2502.06830
+🌋 Paper link: https://www.sciencedirect.com/science/article/pii/S1474034626008232
 
 ![Description of Image](static/images/OrderFusion_Structure.PNG)
 

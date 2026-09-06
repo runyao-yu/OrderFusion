@@ -20,25 +20,7 @@ OrderFusion+ extends the original framework from price-index forecasting to **pr
 
 🌐 OrderFusion+ repository *(coming soon)*: [github.com/runyao-yu/OrderFusion-Plus](https://github.com/runyao-yu/OrderFusion-Plus)
 
-### 🟧 Forecasting paradigm
----
-
-- **Pointwise forecasting** — OrderFusion ✓ · OrderFusion+ ✓
-- **Probabilistic forecasting** — OrderFusion ✓ · OrderFusion+ ✓
-
-### 🟧 Forecasting target
----
-
-- **Price index forecasting** — OrderFusion ✓ · OrderFusion+ ✓
-- **Price trajectory forecasting** — OrderFusion ✗ · OrderFusion+ ✓
-
-### 🟧 Input information
----
-
-- **Orderbook data input** — OrderFusion ✓ · OrderFusion+ ✓
-- **Neighboring product input** — OrderFusion ✗ · OrderFusion+ ✓
-- **Fundamental feature input** — OrderFusion ✗ · OrderFusion+ ✓
-- **Calendar feature input** — OrderFusion ✗ · OrderFusion+ ✓
+![OrderFusion vs OrderFusion+](static/images/OrderFusionPlus_Comparison.svg)
 
 ---
 

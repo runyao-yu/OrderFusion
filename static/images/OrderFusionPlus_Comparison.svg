@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760">
+  <rect width="1200" height="760" fill="#ffffff"/>
+
+  <style>
+    .title { font-family: Arial, Helvetica, sans-serif; fill: #111827; font-weight: 700; font-size: 34px; }
+    .colhead { font-family: Arial, Helvetica, sans-serif; fill: #111827; font-weight: 700; font-size: 28px; }
+    .subhead { font-family: Arial, Helvetica, sans-serif; fill: #111827; font-weight: 700; font-size: 28px; }
+    .label { font-family: Arial, Helvetica, sans-serif; fill: #111827; font-size: 24px; }
+    .mark { font-family: Arial, Helvetica, sans-serif; fill: #111827; font-size: 28px; font-weight: 700; }
+  </style>
+
+  <!-- Column positions -->
+  <!-- left margin 60 -->
+  <!-- col1 x=60 -->
+  <!-- col2 center ~760 -->
+  <!-- col3 center ~1035 -->
+
+  <!-- Header -->
+  <text x="60" y="58" class="colhead">Capability</text>
+  <text x="760" y="58" text-anchor="middle" class="colhead">OrderFusion</text>
+  <text x="1035" y="58" text-anchor="middle" class="colhead">OrderFusion+</text>
+
+  <!-- Section 1 -->
+  <rect x="60" y="92" width="340" height="42" rx="8" fill="#FED7AA"/>
+  <text x="78" y="120" class="subhead">Forecasting paradigm</text>
+  <line x1="60" y1="148" x2="1140" y2="148" stroke="#F97316" stroke-width="3"/>
+
+  <text x="60" y="198" class="label">Pointwise forecasting</text>
+  <text x="760" y="198" text-anchor="middle" class="mark">✓</text>
+  <text x="1035" y="198" text-anchor="middle" class="mark">✓</text>
+
+  <text x="60" y="242" class="label">Probabilistic forecasting</text>
+  <text x="760" y="242" text-anchor="middle" class="mark">✓</text>
+  <text x="1035" y="242" text-anchor="middle" class="mark">✓</text>
+
+  <!-- Section 2 -->
+  <rect x="60" y="290" width="300" height="42" rx="8" fill="#FED7AA"/>
+  <text x="78" y="318" class="subhead">Forecasting target</text>
+  <line x1="60" y1="346" x2="1140" y2="346" stroke="#F97316" stroke-width="3"/>
+
+  <text x="60" y="396" class="label">Price index forecasting</text>
+  <text x="760" y="396" text-anchor="middle" class="mark">✓</text>
+  <text x="1035" y="396" text-anchor="middle" class="mark">✓</text>
+
+  <text x="60" y="440" class="label">Price trajectory forecasting</text>
+  <text x="760" y="440" text-anchor="middle" class="mark">✗</text>
+  <text x="1035" y="440" text-anchor="middle" class="mark">✓</text>
+
+  <!-- Section 3 -->
+  <rect x="60" y="488" width="265" height="42" rx="8" fill="#FED7AA"/>
+  <text x="78" y="516" class="subhead">Input information</text>
+  <line x1="60" y1="544" x2="1140" y2="544" stroke="#F97316" stroke-width="3"/>
+
+  <text x="60" y="594" class="label">Orderbook data input</text>
+  <text x="760" y="594" text-anchor="middle" class="mark">✓</text>
+  <text x="1035" y="594" text-anchor="middle" class="mark">✓</text>
+
+  <text x="60" y="638" class="label">Neighboring product input</text>
+  <text x="760" y="638" text-anchor="middle" class="mark">✗</text>
+  <text x="1035" y="638" text-anchor="middle" class="mark">✓</text>
+
+  <text x="60" y="682" class="label">Fundamental feature input</text>
+  <text x="760" y="682" text-anchor="middle" class="mark">✗</text>
+  <text x="1035" y="682" text-anchor="middle" class="mark">✓</text>
+
+  <text x="60" y="726" class="label">Calendar feature input</text>
+  <text x="760" y="726" text-anchor="middle" class="mark">✗</text>
+  <text x="1035" y="726" text-anchor="middle" class="mark">✓</text>
+</svg>

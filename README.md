@@ -18,7 +18,7 @@ Encoding Orderbook for End-to-End Probabilistic Intraday Electricity Price Forec
 
 OrderFusion+ extends the original framework from price-index forecasting to **price-trajectory forecasting**, while incorporating richer market information, including neighboring products, fundamental features, and calendar features.
 
-🌐 OrderFusion+ repository *(coming soon)*: [github.com/runyao-yu/OrderFusion-Plus](https://github.com/runyao-yu/OrderFusion-Plus)
+🌐 OrderFusion+ repository: [github.com/runyao-yu/OrderFusion-Plus](https://github.com/runyao-yu/OrderFusion-Plus)
 
 ![OrderFusion vs OrderFusion+](static/images/OrderFusionPlus_Comparison.svg)
 

@@ -412,18 +412,26 @@ async function fetchRange(a, b) {                       // inclusive byte range
   store.whole = new Uint8Array(await r.arrayBuffer());  // server without range support: keep the whole file
   return store.whole.slice(a, b + 1);
 }
-async function fileSize() {
-  const r = await fetch(FILE, { method: "HEAD" });
-  if (!r.ok) throw new Error("HTTP " + r.status);
-  return Number(r.headers.get("content-length"));
-}
 async function openDirectory() {
-  const size = await fileSize();
-  const tail = await fetchRange(size - 22, size - 1);
-  const v = new DataView(tail.buffer, tail.byteOffset);
-  if (v.getUint32(0, true) !== 0x06054b50) throw new Error("unexpected file ending");
+  // Read the end of the zip with a suffix range (no HEAD request, no need to know the file size first).
+  // If the server ignores ranges and returns the whole file, keep it in memory and slice from it.
+  const TAIL = 65536 + 22;
+  const r = await fetch(FILE, { headers: { Range: `bytes=-${TAIL}` } });
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  let tail = new Uint8Array(await r.arrayBuffer()), size;
+  if (r.status === 206) {
+    const m = /\/(\d+)\s*$/.exec(r.headers.get("content-range") || "");
+    size = m ? +m[1] : NaN;
+  } else { store.whole = tail; size = tail.length; tail = tail.subarray(Math.max(0, size - TAIL)); }
+  let e = -1;                                            // end-of-central-directory record
+  for (let p = tail.length - 22; p >= 0; p--) if (tail[p] === 0x50 && tail[p + 1] === 0x4b && tail[p + 2] === 5 && tail[p + 3] === 6) { e = p; break; }
+  if (e < 0) throw new Error("zip directory not found");
+  const v = new DataView(tail.buffer, tail.byteOffset + e, 22);
   const cdSize = v.getUint32(12, true), cdOff = v.getUint32(16, true);
-  const cd = await fetchRange(cdOff, cdOff + cdSize - 1), d = new DataView(cd.buffer, cd.byteOffset);
+  if (!isFinite(size)) size = cdOff + cdSize + (tail.length - e);   // directory is followed only by this record
+  const tailStart = size - tail.length;
+  const cd = cdOff >= tailStart ? tail.subarray(cdOff - tailStart, cdOff - tailStart + cdSize) : await fetchRange(cdOff, cdOff + cdSize - 1);
+  const d = new DataView(cd.buffer, cd.byteOffset, cd.byteLength);
   const dir = new Map(), dec = new TextDecoder();
   for (let p = 0; p < cd.length;) {
     const method = d.getUint16(p + 10, true), csize = d.getUint32(p + 20, true);

@@ -330,15 +330,14 @@ footer { padding: 3.11rem 0; margin-top: 5.02rem; text-align: center; hyphens: n
       <a class="btn" id="dl-data" href="../Forecasts/orderfusion_forecasts_2024.npz" download>Forecasts download (.npz, 79 MB)</a>
       <a class="btn ghost" id="dl-script" href="../Forecasts/read_forecasts.py" download>Python reader (.py)</a>
     </div>
-    <p>The download is one compressed file with the forecasts of all models for the full test year 2024,
-      together with the VWAP trajectories. The Python reader retrieves any
+    <p>The download is one compressed file with the forecasts of all models for the full test year 2024. The Python reader retrieves any
       forecast with one line and needs only NumPy.</p>
 <pre><code>from read_forecasts import Forecasts
 f = Forecasts("orderfusion_forecasts_2024.npz")
 f.get("OrderFusionPlus", "2024-07-23 18:00", origin=-180)</code></pre>
-    <p><b>Disclaimer.</b> The forecasts and trajectories are “derived information” and not raw data from the
-      commercial orderbook. They can only be used for research purpose and the usage must be approved by the authors of OrderFusion. The underlying
-      orderbook data can be purchased from
+    <p><b>Disclaimer.</b> The forecasts and extracted VWAPs are derived information, impacted by missing sides, and
+      not raw data from the commercial orderbook. The orderbook and any index sold by EPEX SPOT cannot be reproduced from them. The forecasts are AI-generated and do not represent data published by EPEX SPOT. The forecasts can only be used for research purpose and the usage must be approved by the
+      authors of OrderFusion. The raw orderbook data cannot be provided by us and can be purchased from
       <a href="https://webshop.eex-group.com/epex-spot-public-market-data" target="_blank" rel="noopener">EPEX SPOT</a>.</p>
   </div>
 </section>

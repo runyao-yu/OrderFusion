@@ -1,12 +1,9 @@
 # OrderFusion
 
-An Open-Source Deep Neural Network for Intraday Price Forecasting
+An Open-Source Deep Neural Network for Intraday Price Forecasting 🏆
 
-Our **Project page** below shows an overview of the work, feature comparison of OrderFusion and OrderFusion+, interactive visualization, and other information.
+Our **project page** (https://runyao-yu.github.io/OrderFusion/) shows an overview of the work, feature comparison of OrderFusion and OrderFusion+, interactive visualization, and other information.
 
-https://runyao-yu.github.io/OrderFusion/
-
-🏆🏆🏆
 
 ![Structure of OrderFusion+](Project_page/images/orderfusion_plus_model.png)
 

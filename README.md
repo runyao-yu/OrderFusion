@@ -1,82 +1,83 @@
 # OrderFusion
-Encoding Orderbook for End-to-End Probabilistic Intraday Electricity Price Forecasting
 
-**Accepted to Advanced Engineering Informatics 2026 (IF=11.5)**.
-
-🦊 Summary page: https://runyao-yu.github.io/OrderFusion/
-
-🌋 Paper link: https://www.sciencedirect.com/science/article/pii/S1474034626008232
-
-![Description of Image](static/images/OrderFusion_Structure.PNG)
-
-
----
+An Open-Source Deep Neural Network for Intraday Price Forecasting
 
 ## 📢 News
 
-🚀 **Stay tuned! We are developing OrderFusion+, i.e. OrderFusion v2.**
-
-OrderFusion+ extends the original framework from price-index forecasting to **price-trajectory forecasting**, while incorporating richer market information, including neighboring products, fundamental features, and calendar features.
-
-🌐 OrderFusion+ repository: [github.com/runyao-yu/OrderFusion-Plus](https://github.com/runyao-yu/OrderFusion-Plus)
-
-![OrderFusion vs OrderFusion+](static/images/OrderFusionPlus_Comparison.svg)
-
----
-
-## 🚀 Quick Start
- 
-The project directory is structured as follows:
+**18 Sep 2026.** Inspired by the discussion with Leo Semmelmann and Joseph Cary, we have upgraded OrderFusion from v1 to v2 (**OrderFusion+**).
 
 
+OrderFusion+ is our latest and most powerful forecasting tool for continuous intraday market. The model is now able to take neighboring products as input, reflects dynamically on the market condition, and produces probabilisitic buy-sell price trajectory forecasts with uncertainties.
 
-    ├── Data/
-    │   └── Country (e.g. Germany)/
-    │       └── Intraday Continuous/
-    │           └── Orders/
-    │               └── Year (e.g. 2023)/
-    │                   ├── Month (e.g. 01)/
-    │                   ├── Month (e.g. 02)/
-    │                   ├── Month (e.g. 03)/
-    │                   └── ...
-    ├── Figure/
-    ├── Model/
-    ├── Your_notebook.ipynb
+![Structure of OrderFusion+](Project_page/images/orderfusion_plus_model.png)
 
-To facilitate reproducibility and accessibility, we have streamlined the entire pipeline into just few simple steps:
+**5 Aug 2026.** OrderFusion is accepted by Advanced Engineering Informatics (IF=11.5).
 
-⚡️ (1) Create empty folders `Data`, `Figure` and `Model` in the parent folder;
+OrderFusion utilizes cross-attention to model the buy-sell interaction and is designed for probabilisitic price index forecasting. 
 
-⚡️ (2) Place the purchased orderbook data into `Data` folder. Purchase source: https://webshop.eex-group.com/epex-spot-public-market-data (Several data types are available. For example, the “Continuous Anonymous Orders History” for Germany costs 325 EUR/month.);
+## 🦊 Project page
 
-⚡️ (3) Create your empty notebook ended with `.ipynb`;
+https://runyao-yu.github.io/OrderFusion/
 
-⚡️ (4) Run `pip install OrderFusion` in your notebook;
+The project page shows the interactive forecasts of OrderFusion+ and all baselines for every delivery product in 2024.
 
-Go through `Tutorial.ipynb` to understand the usage, e.g.:
-- `OrderFusion.read_data()` to read data;
-- `OrderFusion.optimize_model()` to train and optimize model;
-- `OrderFusion.evaluate_model()` to produce various testing metrics;
-- `OrderFusion.plot_forecasts()` to generate figure of forecasts.
+- OrderFusion+ paper: tba
+- OrderFusion paper (Advanced Engineering Informatics, 2026): https://www.sciencedirect.com/science/article/pii/S1474034626008232
 
-## 💾 Installation Requirements
+## 💾 Data source
 
-Running the `pip install OrderFusion` automatically install the required 
-packages. The detailed information is as follows:
+The orderbook data can be purchased from EPEX SPOT: https://webshop.eex-group.com/epex-spot-public-market-data
 
-- The file **`requirements.txt`** lists all dependencies with fixed versions used in this project. 
-- The recommended **Python version** is **3.10**, since TensorFlow 2.16.2 officially supports only Python 3.10 – 3.11. 
-- Required Packages:
+We publish the derived information, i.e. our forecasts and the extracted VWAP trajectories, to help the energy community benchmark models and develop novel trading strategies. The single file `Forecasts/orderfusion_forecasts_2024.npz` holds the forecasts of all models for the full test year 2024, and `Forecasts/read_forecasts.py` retrieves any of them:
 
-```txt
-tensorflow==2.16.2
-numpy==1.26.4
-pandas==2.2.2
-scikit-learn==1.5.2
-matplotlib==3.7.0
-imageio==2.26.0
-Pillow==10.4.0
-joblib==1.4.2
-natsort==8.4.0
-tqdm==4.66.5
-ipython==8.10.0
+```python
+from read_forecasts import Forecasts
+f = Forecasts("orderfusion_forecasts_2024.npz")
+f.get("OrderFusionPlus", "2024-07-23 18:00", origin=-180)
+```
+
+The forecasts and trajectories are "derived information" and not raw data from the commercial orderbook. They can only be used for research purpose and the usage must be approved by the authors of OrderFusion.
+
+## 🚀 Repository
+
+    ├── OrderFusion/      model.py, preprocessing.py, evaluation.py, fake_data_generation.py
+    ├── Forecasts/        forecasts of all models for 2024 and the Python reader
+    ├── Project_page/     project page
+    ├── Tutorial.ipynb    preprocessing, modeling, and evaluation step by step
+    └── README.md
+
+## 🧰 Required packages
+
+- Python 3.10.15
+- PyTorch 2.3.0
+- NumPy 1.26.4
+- pandas 2.2.2
+- PyArrow 15.0.0
+- Matplotlib 3.7.0
+- JupyterLab 3.5.3
+- Notebook 6.5.2
+- IPykernel 6.19.2
+
+Install them with `pip install -r requirements.txt`. For training we recommend a CUDA-capable NVIDIA GPU with at least 16 GB VRAM (NVIDIA A100 80 GB recommended).
+
+## 📖 Citation
+
+If you find our work useful or use our forecasts, please cite us.
+
+OrderFusion+: tba
+
+OrderFusion:
+
+```bibtex
+@article{YU2026105131,
+  title   = {OrderFusion: Encoding orderbook for end-to-end probabilistic intraday electricity price forecasting},
+  journal = {Advanced Engineering Informatics},
+  volume  = {76},
+  pages   = {105131},
+  year    = {2026},
+  issn    = {1474-0346},
+  doi     = {https://doi.org/10.1016/j.aei.2026.105131},
+  url     = {https://www.sciencedirect.com/science/article/pii/S1474034626008232},
+  author  = {Runyao Yu and Yuchen Tao and Fabian Leimgruber and Tara Esterl and Jochen Stiasny and Derek W. Bunn and Qingsong Wen and Hongye Guo and Jochen L. Cremer},
+}
+```

@@ -1,11 +1,8 @@
-Pillow==10.4.0
-imageio==2.26.0
-ipython==8.10.0
-joblib==1.4.2
-matplotlib==3.7.0
-natsort==8.4.0
+torch==2.3.0
 numpy==1.26.4
 pandas==2.2.2
-scikit-learn==1.5.2
-tensorflow==2.16.2
-tqdm==4.66.5
+pyarrow==15.0.0
+matplotlib==3.7.0
+jupyterlab==3.5.3
+notebook==6.5.2
+ipykernel==6.19.2

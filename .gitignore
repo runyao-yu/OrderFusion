@@ -1,6 +1,12 @@
-Data/*.pkl
-!Data/.gitkeep
-
+# local working folders (created by Tutorial.ipynb) and private data
+data/
+model/
+result/
+_to_delete/
+__pycache__/
+*.pkl
+*.parquet
 *.csv
-*.pdf
-__pycache__
+.ipynb_checkpoints/
+desktop.ini
+*.remove_me

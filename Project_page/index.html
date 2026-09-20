@@ -287,7 +287,7 @@ footer { padding: 3.11rem 0; margin-top: 5.02rem; text-align: center; hyphens: n
 
     <div class="controls">
       <label>Date
-        <input type="date" id="c-date" min="2023-12-31" max="2024-12-31" value="2024-07-23"></label>
+        <input type="date" id="c-date" min="2024-01-01" max="2024-12-31" value="2024-07-23"></label>
       <label>Hour of day
         <select id="c-hour"></select></label>
       <label>Quarter of hour
@@ -507,7 +507,7 @@ function collect(fc, truth, ys, ps) {                   // valid (truth, forecas
   }
 }
 function productScores(fc, truth) { const ys = [], ps = []; collect(fc, truth, ys, ps); return scoreArrays(ys, ps); }
-const scoreHtml = sc => sc ? ["AQL", "AQCE", "MAE", "R2"].map(k => `<b>${k === "R2" ? "R²" : k}</b> ${fmt(sc[k])}`).join("") : "";
+const scoreHtml = sc => sc ? ["AQL", "MAE"].map(k => `<b>${k}</b> ${fmt(sc[k])}`).join("") : "";
 
 /* ------------------------------------------------------------------ chart (native SVG, monochrome base) */
 const NS = "http://www.w3.org/2000/svg";
@@ -643,7 +643,7 @@ async function render() {
   const models = [...document.querySelectorAll("#c-models input:checked")].map(i => i.value);
   const panels = $("panels"), meta = store.meta;
   models.sort((a, b) => meta.models.indexOf(a) - meta.models.indexOf(b));   // OrderFusion+ first
-  if (!meta.days.includes(date)) { panels.replaceChildren(); return status("Please pick a date between 31 Dec 2023 and 31 Dec 2024."); }
+  if (!meta.days.includes(date) || !date.startsWith("2024")) { panels.replaceChildren(); return status("Please pick a date in 2024."); }
   if (!models.length) { panels.replaceChildren(); return status("Select at least one model."); }
   status("Loading forecasts …");
   const slot = hour * 4 + quarter, ticket = render.ticket = (render.ticket || 0) + 1;
@@ -722,7 +722,7 @@ async function renderWeek() {
 }
 
 (async function init() {
-  const hs = $("c-hour"); for (let h = 0; h < 24; h++) hs.add(new Option(pad(h) + ":00", h)); hs.value = 18;
+  const hs = $("c-hour"); for (let h = 0; h < 24; h++) hs.add(new Option(pad(h) + ":00", h)); hs.value = 22;
   ["c-date", "c-hour", "c-quarter"].forEach(id => $(id).addEventListener("change", render));
   $("c-origin").addEventListener("change", render); $("c-worigin").addEventListener("change", renderWeek);
   MONTHS.forEach((m, i) => $("c-month").add(new Option(m + " 2024", i + 1))); $("c-month").value = 7;

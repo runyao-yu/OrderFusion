@@ -1,39 +1,30 @@
 # OrderFusion
 
-An Open-Source Deep Neural Network for Intraday Price Forecasting
+An Open-Source Deep Neural Network for Intraday Price Forecasting 🏆
 
-## 📢 News
-
-**18 Sep 2026.** Inspired by the discussion with Leo Semmelmann and Joseph Cary, we have upgraded OrderFusion from v1 to v2 (**OrderFusion+**).
-
-The model is now able to take neighboring products as input, reflects dynamically on the market condition, and produces buy-sell price trajectory forecasts with uncertainties.
+Our **project page** (https://runyao-yu.github.io/OrderFusion/) shows an overview of the work, feature comparison of OrderFusion and OrderFusion+, interactive visualization, and other information.
 
 ![Structure of OrderFusion+](Project_page/images/orderfusion_plus_model.png)
 
-**5 Aug 2026.** OrderFusion is accepted by Advanced Engineering Informatics (IF=11.5).
+## 📢 News
 
-## 🦊 Project page
+**18 Sep 2026.** Inspired by the discussion with Leo Semmelmann, Joseph Cary, and Derek W. Bunn, we have upgraded OrderFusion from v1 to v2 (OrderFusion+). OrderFusion+ is our latest and most powerful forecasting tool for continuous intraday market. The model is now able to take neighboring products as input, reflects dynamically on the market condition, and produces probabilisitic buy-sell price trajectory forecasts with uncertainties.
 
-https://runyao-yu.github.io/OrderFusion/
+**5 Aug 2026.** OrderFusion is accepted by Advanced Engineering Informatics (IF=11.5). OrderFusion utilizes cross-attention to model the buy-sell interaction and is designed for probabilisitic price index forecasting.
 
-The project page shows the interactive forecasts of OrderFusion+ and all baselines for every delivery product in 2024.
-
-- OrderFusion+ paper (arXiv, 2026): https://arxiv.org/abs/2609.23598
-- OrderFusion paper (Advanced Engineering Informatics, 2026): https://www.sciencedirect.com/science/article/pii/S1474034626008232
 
 ## 💾 Data source
 
 The orderbook data can be purchased from EPEX SPOT: https://webshop.eex-group.com/epex-spot-public-market-data
 
-We publish the derived information, i.e. our forecasts and the extracted VWAP trajectories, to help the energy community benchmark models and develop novel trading strategies. The single file `Forecasts/orderfusion_forecasts_2024.npz` holds the forecasts of all models for the full test year 2024, and `Forecasts/read_forecasts.py` retrieves any of them:
+We publish the derived information, i.e. our forecasts, to help the energy community benchmark models and develop novel trading strategies. The single file `Forecasts/orderfusion_forecasts_2024.npz` holds the forecasts of all models for the full test year 2024, and `Forecasts/read_forecasts.py` retrieves any of them:
 
 ```python
 from read_forecasts import Forecasts
 f = Forecasts("orderfusion_forecasts_2024.npz")
 f.get("OrderFusionPlus", "2024-07-23 18:00", origin=-180)
 ```
-
-The forecasts and extracted VWAPs are derived information, impacted by missing sides, and not raw data from the commercial orderbook. The orderbook and any index sold by EPEX SPOT cannot be reproduced from them. The forecasts are AI-generated and do not represent data published by EPEX SPOT. The forecasts can only be used for research purpose and the usage must be approved by the authors of OrderFusion. The raw orderbook data cannot be provided by us and can be purchased from EPEX SPOT.
+The forecasts are derived information, impacted by missing sides, and not raw data from the commercial orderbook. The orderbook and any index sold by EPEX SPOT cannot be reproduced from them. The forecasts are AI-generated and do not represent data published by EPEX SPOT. The forecasts can only be used for research purpose and the usage must be approved by the authors of OrderFusion. The raw orderbook data cannot be provided by us and can be purchased from EPEX SPOT.
 
 ## 🚀 Repository
 
@@ -65,13 +56,13 @@ OrderFusion+:
 
 ```bibtex
 @misc{yu2026orderfusionplus,
-  title         = {OrderFusion+: Probabilistic Buy--Sell Price Trajectory Forecasting in Intraday Electricity Markets},
-  author        = {Runyao Yu and Derek W. Bunn},
-  year          = {2026},
-  eprint        = {2609.23598},
-  archivePrefix = {arXiv},
-  primaryClass  = {q-fin.CP},
-  url           = {https://arxiv.org/abs/2609.23598},
+      title={OrderFusion+: Probabilistic Buy--Sell Price Trajectory Forecasting in Intraday Electricity Markets}, 
+      author={Runyao Yu and Derek W. Bunn},
+      year={2026},
+      eprint={2609.23598},
+      archivePrefix={arXiv},
+      primaryClass={q-fin.CP},
+      url={https://arxiv.org/abs/2609.23598}, 
 }
 ```
 

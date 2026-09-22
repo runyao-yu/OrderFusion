@@ -162,7 +162,7 @@ footer { padding: 3.11rem 0; margin-top: 5.02rem; text-align: center; hyphens: n
     <a href="#cite">Cite</a>
     <details class="menu"><summary>Paper</summary>
       <div class="menu-list">
-        <a href="#" id="paper-plus" title="The link will be added once the paper is public">OrderFusion+</a>
+        <a href="https://arxiv.org/abs/2609.23598" target="_blank" rel="noopener">OrderFusion+</a>
         <a href="https://www.sciencedirect.com/science/article/pii/S1474034626008232" target="_blank" rel="noopener">OrderFusion</a>
       </div></details>
     <a href="https://github.com/runyao-yu/OrderFusion" target="_blank" rel="noopener">Code</a>
@@ -347,7 +347,15 @@ f.get("OrderFusionPlus", "2024-07-23 18:00", origin=-180)</code></pre>
     <h2>Cite</h2>
     <p>If you find our work useful or use our forecasts, please cite us.</p>
     <p><b>OrderFusion+</b></p>
-<pre><code>Placeholder. The reference will be added once the paper is public.</code></pre>
+<pre><code>@misc{yu2026orderfusionplus,
+  title         = {OrderFusion+: Probabilistic Buy--Sell Price Trajectory Forecasting in Intraday Electricity Markets},
+  author        = {Runyao Yu and Derek W. Bunn},
+  year          = {2026},
+  eprint        = {2609.23598},
+  archivePrefix = {arXiv},
+  primaryClass  = {q-fin.CP},
+  url           = {https://arxiv.org/abs/2609.23598},
+}</code></pre>
     <p><b>OrderFusion</b></p>
 <pre><code>@article{YU2026105131,
   title   = {OrderFusion: Encoding orderbook for end-to-end probabilistic intraday electricity price forecasting},
@@ -729,7 +737,6 @@ async function renderWeek() {
   ["c-month", "c-week"].forEach(id => $(id).addEventListener("change", renderWeek));
   let t; addEventListener("resize", () => { clearTimeout(t); t = setTimeout(() => { current.forEach(j => drawChart(j.host, j.fc, j.truth, j.origin, j.yr)); currentWeek.forEach(j => drawWeek(j.host, j.wk, j.yr)); }, 150); });
   addEventListener("scroll", hideTip, { passive: true });
-  $("paper-plus").addEventListener("click", e => e.preventDefault());
   if (!("DecompressionStream" in window)) return status("Your browser is too old for the interactive forecasts. Please update it, or use the download below.");
   status("Loading forecasts …");
   try {

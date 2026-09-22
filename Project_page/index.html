@@ -300,8 +300,6 @@ footer { padding: 3.11rem 0; margin-top: 5.02rem; text-align: center; hyphens: n
     <div class="legend" aria-hidden="true">
       <span><svg viewBox="0 0 32 20"><line x1="16" y1="2" x2="16" y2="18" stroke="#001F62" stroke-width="2"/><line x1="11" y1="2" x2="21" y2="2" stroke="#001F62" stroke-width="2"/><line x1="11" y1="18" x2="21" y2="18" stroke="#001F62" stroke-width="2"/><circle cx="16" cy="10" r="4" fill="#001F62"/></svg>Buy forecast</span>
       <span><svg viewBox="0 0 32 20"><line x1="16" y1="2" x2="16" y2="18" stroke="#BF1432" stroke-width="2"/><line x1="11" y1="2" x2="21" y2="2" stroke="#BF1432" stroke-width="2"/><line x1="11" y1="18" x2="21" y2="18" stroke="#BF1432" stroke-width="2"/><circle cx="16" cy="10" r="4" fill="#BF1432"/></svg>Sell forecast</span>
-      <span><svg viewBox="0 0 32 20"><line x1="0" y1="10" x2="32" y2="10" stroke="#6D8ACF" stroke-width="2"/><circle cx="16" cy="10" r="4" fill="#6D8ACF"/></svg>Buy VWAP (ground truth)</span>
-      <span><svg viewBox="0 0 32 20"><line x1="0" y1="10" x2="32" y2="10" stroke="#E58A92" stroke-width="2"/><circle cx="16" cy="10" r="4" fill="#E58A92"/></svg>Sell VWAP (ground truth)</span>
     </div>
 
     <p id="status" role="status" aria-live="polite"></p>
@@ -309,9 +307,8 @@ footer { padding: 3.11rem 0; margin-top: 5.02rem; text-align: center; hyphens: n
 
     <p style="margin-top:3.5rem"><b>Macro-level buy-sell indices.</b> A single trajectory shows one product. To see how the
       market expectation moves as time goes by, from one delivery time to the next over a whole week, each product
-      is summarized by one index per side: the mean VWAP over the forecasting window, and for the forecast the
-      mean of each quantile over the same window. Following the indices along the delivery time shows whether a
-      model tracks the daily price pattern, its turning points, and the spread between the buy and sell sides, and
+      is summarized by one index per side: the mean of each forecast quantile over the forecasting window. Following the indices along the delivery time shows whether a
+      model expects the daily price pattern, its turning points, and the spread between the buy and sell sides, and
       how wide its uncertainty is. The shaded bars span the 0.1 to 0.9 quantiles and the dark lines mark the 0.5
       quantile.</p>
     <div class="controls">
@@ -327,7 +324,7 @@ footer { padding: 3.11rem 0; margin-top: 5.02rem; text-align: center; hyphens: n
     <div id="week-panels"></div>
 
     <div class="btns">
-      <a class="btn" id="dl-data" href="../Forecasts/orderfusion_forecasts_2024.npz" download>Forecasts download (.npz, 79 MB)</a>
+      <a class="btn" id="dl-data" href="../Forecasts/orderfusion_forecasts_2024.npz" download>Forecasts download (.npz, 77 MB)</a>
       <a class="btn ghost" id="dl-script" href="../Forecasts/read_forecasts.py" download>Python reader (.py)</a>
     </div>
     <p>The download is one compressed file with the forecasts of all models for the full test year 2024. The Python reader retrieves any
@@ -335,7 +332,7 @@ footer { padding: 3.11rem 0; margin-top: 5.02rem; text-align: center; hyphens: n
 <pre><code>from read_forecasts import Forecasts
 f = Forecasts("orderfusion_forecasts_2024.npz")
 f.get("OrderFusionPlus", "2024-07-23 18:00", origin=-180)</code></pre>
-    <p><b>Disclaimer.</b> The forecasts and extracted VWAPs are derived information, impacted by missing sides, and
+    <p><b>Disclaimer.</b> The forecasts are derived information, impacted by missing sides, and
       not raw data from the commercial orderbook. The orderbook and any index sold by EPEX SPOT cannot be reproduced from them. The forecasts are AI-generated and do not represent data published by EPEX SPOT. The forecasts can only be used for research purpose and the usage must be approved by the
       authors of OrderFusion. The raw orderbook data cannot be provided by us and can be purchased from
       <a href="https://webshop.eex-group.com/epex-spot-public-market-data" target="_blank" rel="noopener">EPEX SPOT</a>.</p>
@@ -489,38 +486,11 @@ function decodeForecast(m, slot, origin, scale) {       // -> [steps][side][quan
   }
   return out;
 }
-function decodeTruth(m, slot, scale) {                  // -> [12][side] for 180..15 min, NaN if no trade
-  const out = [];
-  for (let s = 0; s < 12; s++) {
-    const i = slot * 24 + s * 2;
-    out.push([0, 1].map(k => m.data[i + k] === m.min ? NaN : m.data[i + k] / scale));
-  }
-  return out;
-}
-function scoreArrays(ys, ps) {                          // AQL, AQCE (%), MAE, R² from truths ys and quantile triples ps
-  const Q = [0.1, 0.5, 0.9], n = ys.length; if (!n) return null;
-  let ql = 0, ae = 0, se = 0, tot = 0; const cover = [0, 0, 0], mean = ys.reduce((a, b) => a + b, 0) / n;
-  ys.forEach((y, i) => {
-    Q.forEach((q, k) => { const e = y - ps[i][k]; ql += Math.max(q * e, (q - 1) * e); if (y <= ps[i][k]) cover[k]++; });
-    ae += Math.abs(y - ps[i][1]); se += (y - ps[i][1]) ** 2; tot += (y - mean) ** 2;
-  });
-  return { AQL: ql / (3 * n), AQCE: 100 * Q.reduce((a, q, k) => a + Math.abs(cover[k] / n - q), 0) / 3,
-           MAE: ae / n, R2: tot > 0 ? 1 - se / tot : NaN };
-}
-function collect(fc, truth, ys, ps) {                   // valid (truth, forecast) pairs of one product
-  const steps = fc.length;
-  for (let s = 0; s < steps; s++) for (let side = 0; side < 2; side++) {
-    const y = truth[12 - steps + s][side]; if (isFinite(y)) { ys.push(y); ps.push(fc[s][side]); }
-  }
-}
-function productScores(fc, truth) { const ys = [], ps = []; collect(fc, truth, ys, ps); return scoreArrays(ys, ps); }
-const scoreHtml = sc => sc ? ["AQL", "MAE"].map(k => `<b>${k}</b> ${fmt(sc[k])}`).join("") : "";
-
 /* ------------------------------------------------------------------ chart (native SVG, monochrome base) */
 const NS = "http://www.w3.org/2000/svg";
 const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag);
   for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
-const COLORS = ["#001F62", "#BF1432"], TRUTH = ["#6D8ACF", "#E58A92"], SIDES = ["Buy", "Sell"];
+const COLORS = ["#001F62", "#BF1432"], SIDES = ["Buy", "Sell"];
 const fmt = v => isFinite(v) ? v.toFixed(2).replace("-", "−") : "–";
 const tip = document.getElementById("tip");
 function showTip(ev, html) { tip.innerHTML = html; tip.style.display = "block";
@@ -535,14 +505,14 @@ function niceTicks(lo, hi, n) {
   const t = []; for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) t.push(+v.toFixed(6));
   return t;
 }
-function drawChart(host, fc, truth, origin, yr) {
+function drawChart(host, fc, origin, yr) {
   const fs = parseFloat(getComputedStyle(document.body).fontSize);
   const W = host.clientWidth, H = Math.round(Math.max(300, Math.min(440, W * 0.46)));
   const M = { l: fs * 4.2, r: fs * 0.6, t: fs * 0.8, b: fs * 3.4 }, pw = W - M.l - M.r, ph = H - M.t - M.b;
   const X0 = -origin, nb = X0 / 15, s0 = 12 - nb;          // the forecasting window only
   const x = m => M.l + (X0 - m) / X0 * pw, y = v => M.t + (yr[1] - v) / (yr[1] - yr[0]) * ph;
   const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img",
-    "aria-label": "Forecast and realised VWAP trajectory in EUR per MWh against minutes before delivery" });
+    "aria-label": "Forecast trajectory in EUR per MWh against minutes before delivery" });
   const txt = (s, a) => { const t = el("text", Object.assign({ "font-size": fs }, a), svg); t.textContent = s; return t; };
   // grid and axes
   niceTicks(yr[0], yr[1], 5).forEach(v => {
@@ -555,18 +525,10 @@ function drawChart(host, fc, truth, origin, yr) {
   xt.forEach(m => { el("line", { x1: x(m), x2: x(m), y1: M.t + ph, y2: M.t + ph + 6, stroke: "#000", "stroke-width": 2 }, svg);
     txt(m === 0 ? "0" : "−" + m, { x: x(m), y: M.t + ph + fs * 1.35, "text-anchor": m === 0 ? "end" : "middle" }); });
   txt("Minutes before delivery", { x: M.l + pw / 2, y: H - fs * 0.35, "text-anchor": "middle" });
-  const yl = txt("VWAP (€/MWh)", { "text-anchor": "middle" });
+  const yl = txt("Price (€/MWh)", { "text-anchor": "middle" });
   yl.setAttribute("transform", `translate(${fs * 0.95},${M.t + ph / 2}) rotate(-90)`);
-  // ground truth VWAP: light blue (buy) and light red (sell)
   const cx = s => x(180 - s * 15 - 7.5);                 // bucket centre
-  for (let side = 0; side < 2; side++) {
-    let d = "", pen = false;
-    truth.forEach((t, s) => { if (s < s0) return; if (isFinite(t[side])) { d += (pen ? "L" : "M") + cx(s).toFixed(1) + " " + y(t[side]).toFixed(1); pen = true; } else pen = false; });
-    el("path", { d, fill: "none", stroke: TRUTH[side], "stroke-width": 2, "stroke-linejoin": "round" }, svg);
-  }
   const r = Math.max(3, Math.min(4.5, pw / 200)), rf = r + 0.5;
-  truth.forEach((t, s) => [0, 1].forEach(side => { if (s >= s0 && isFinite(t[side]))
-    el("circle", { cx: cx(s), cy: y(t[side]), r, fill: TRUTH[side] }, svg); }));
   // forecast bars: vertical 0.1-0.9 line, short end ticks, dot at 0.5
   const off = Math.min(pw / nb * 0.2, 12), cap = Math.min(pw / nb * 0.13, 7), steps = fc.length;
   fc.forEach((row, k) => [0, 1].forEach(side => {
@@ -578,13 +540,11 @@ function drawChart(host, fc, truth, origin, yr) {
     el("circle", { cx: px, cy: y(md), r: r + 0.5, fill: c, stroke: "none" }, g);
   }));
   // hover targets per 15-min bucket
-  truth.forEach((t, s) => {
-    if (s < s0) return;
+  fc.forEach((row, k) => {
+    const s = 12 - steps + k, from = 180 - s * 15;
     const hit = el("rect", { x: x(180 - s * 15), y: M.t, width: pw / nb, height: ph, fill: "transparent" }, svg);
-    const k = s - (12 - steps), from = 180 - s * 15;
-    let html = `<b>${from} to ${from - 15} min before delivery</b><br>Buy VWAP ${fmt(t[0])}<br>Sell VWAP ${fmt(t[1])}`;
-    if (k >= 0) [0, 1].forEach(side => { const q = fc[k][side];
-      html += `<br>${SIDES[side]} forecast ${fmt(q[1])} (${fmt(q[0])} to ${fmt(q[2])})`; });
+    let html = `<b>${from} to ${from - 15} min before delivery</b>`;
+    [0, 1].forEach(side => { const q = row[side]; html += `<br>${SIDES[side]} forecast ${fmt(q[1])} (${fmt(q[0])} to ${fmt(q[2])})`; });
     hit.addEventListener("pointermove", ev => showTip(ev, html));
     hit.addEventListener("pointerleave", hideTip);
   });
@@ -599,7 +559,7 @@ function drawWeek(host, wk, yr) {
   const M = { l: fs * 4.2, r: fs * 0.6, t: fs * 0.8, b: fs * 3.4 }, pw = W - M.l - M.r, ph = H - M.t - M.b, n = wk.n;
   const x = i => M.l + (i + 0.5) / n * pw, y = v => M.t + (yr[1] - v) / (yr[1] - yr[0]) * ph;
   const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img",
-    "aria-label": "Weekly forecasts and realised VWAP in EUR per MWh against delivery time" });
+    "aria-label": "Weekly forecasts in EUR per MWh against delivery time" });
   const txt = (s, a) => { const t = el("text", Object.assign({ "font-size": fs }, a), svg); t.textContent = s; return t; };
   niceTicks(yr[0], yr[1], 5).forEach(v => {
     el("line", { x1: M.l - 6, x2: M.l, y1: y(v), y2: y(v), stroke: "#000", "stroke-width": 2 }, svg);
@@ -611,7 +571,7 @@ function drawWeek(host, wk, yr) {
     el("line", { x1: px, x2: px, y1: M.t + ph, y2: M.t + ph + 6, stroke: "#000", "stroke-width": 2 }, svg);
     if (W >= 560 || k % 2 === 0) txt(`${+d.slice(8)} ${MONTHS[+d.slice(5, 7) - 1]}`, { x: px + pw / n * 48, y: M.t + ph + fs * 1.35, "text-anchor": "middle" }); });
   txt("Delivery time (UTC)", { x: M.l + pw / 2, y: H - fs * 0.35, "text-anchor": "middle" });
-  const yl = txt("VWAP (€/MWh)", { "text-anchor": "middle" });
+  const yl = txt("Price (€/MWh)", { "text-anchor": "middle" });
   yl.setAttribute("transform", `translate(${fs * 0.95},${M.t + ph / 2}) rotate(-90)`);
   const cid = "clip" + Math.random().toString(36).slice(2);
   el("rect", { x: M.l, y: M.t, width: pw, height: ph }, el("clipPath", { id: cid }, el("defs", {}, svg)));
@@ -625,14 +585,12 @@ function drawWeek(host, wk, yr) {
     el("path", { d, fill: "none", stroke: COLORS[side], "stroke-width": Math.max(1, pw / n), "stroke-opacity": 0.28 }, marks);
   }
   for (let side = 0; side < 2; side++)
-    el("path", { d: path(i => wk.truth[side][i]), fill: "none", stroke: TRUTH[side], "stroke-width": 2, "stroke-linejoin": "round" }, marks);
-  for (let side = 0; side < 2; side++)
     el("path", { d: path(i => wk.q[side][i] ? wk.q[side][i][1] : NaN), fill: "none", stroke: COLORS[side], "stroke-width": 2, "stroke-linejoin": "round" }, marks);
   const hit = el("rect", { x: M.l, y: M.t, width: pw, height: ph, fill: "transparent" }, svg);
   hit.addEventListener("pointermove", ev => {
     const r = svg.getBoundingClientRect(), i = Math.max(0, Math.min(n - 1, Math.floor(((ev.clientX - r.left) * W / r.width - M.l) / pw * n)));
     const day = wk.days[Math.floor(i / 96)], sl = i % 96;
-    let html = `<b>${day} ${pad(Math.floor(sl / 4))}:${pad(sl % 4 * 15)} UTC</b><br>Buy VWAP ${fmt(wk.truth[0][i])}<br>Sell VWAP ${fmt(wk.truth[1][i])}`;
+    let html = `<b>${day} ${pad(Math.floor(sl / 4))}:${pad(sl % 4 * 15)} UTC</b>`;
     [0, 1].forEach(side => { const q = wk.q[side][i]; if (q) html += `<br>${SIDES[side]} forecast ${fmt(q[1])} (${fmt(q[0])} to ${fmt(q[2])})`; });
     showTip(ev, html); });
   hit.addEventListener("pointerleave", hideTip);
@@ -655,26 +613,23 @@ async function render() {
   status("Loading forecasts …");
   const slot = hour * 4 + quarter, ticket = render.ticket = (render.ticket || 0) + 1;
   try {
-    const [tm, ...fm] = await Promise.all([member("truth/" + date), ...models.map(m => member(m + "/" + date))]);
+    const fm = await Promise.all(models.map(m => member(m + "/" + date)));
     if (ticket !== render.ticket) return;
-    const truth = decodeTruth(tm, slot, meta.truth_scale);
     const items = models.map((m, i) => ({ key: m, fc: decodeForecast(fm[i], slot, origin, meta.forecast_scale) }));
-    const range = fc => {                                 // y-range of one model: its forecasts and the ground truth
+    const range = fc => {                                 // y-range of one model
       let lo = Infinity, hi = -Infinity; const see = v => { if (isFinite(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); } };
-      truth.slice(12 - (-origin) / 15).flat().forEach(see); fc.flat(2).forEach(see);
+      fc.flat(2).forEach(see);
       if (!isFinite(lo)) { lo = 0; hi = 100; }
       const padY = (hi - lo || 10) * 0.08; return [lo - padY, hi + padY]; };
     const label = `${date} ${pad(hour)}:${pad(quarter * 15)} UTC`;
     panels.replaceChildren(); current = [];
     items.forEach(it => {
       const name = meta.display_names[it.key], p = document.createElement("div"); p.className = "panel";
-      const sc = it.fc && productScores(it.fc, truth);
-      const scores = scoreHtml(sc);
-      p.innerHTML = `<h3>${name}</h3><p class="sub"><span>Delivery ${label}, origin ${origin.replace("-", "−")} min</span><span class="scores">${scores}</span></p><div class="plot"></div>`;
+      p.innerHTML = `<h3>${name}</h3><p class="sub"><span>Delivery ${label}, origin ${origin.replace("-", "−")} min</span></p><div class="plot"></div>`;
       if (!it.fc) { p.querySelector(".plot").textContent = "No forecast is available for this product."; panels.appendChild(p); return; }
       panels.appendChild(p);
-      const job = { host: p.querySelector(".plot"), fc: it.fc, truth, origin: +origin, yr: range(it.fc) };
-      current.push(job); drawChart(job.host, job.fc, job.truth, job.origin, job.yr);
+      const job = { host: p.querySelector(".plot"), fc: it.fc, origin: +origin, yr: range(it.fc) };
+      current.push(job); drawChart(job.host, job.fc, job.origin, job.yr);
     });
     status("");
   } catch (e) { console.error(e); status("The forecasts could not be loaded (" + e.message + ")."); }
@@ -695,32 +650,27 @@ async function renderWeek() {
   st("Loading forecasts …");
   const ticket = renderWeek.ticket = (renderWeek.ticket || 0) + 1;
   try {
-    const tms = await Promise.all(days.map(d => member("truth/" + d)));
     const fms = await Promise.all(models.map(m => Promise.all(days.map(d => member(m + "/" + d)))));
     if (ticket !== renderWeek.ticket) return;
     const n = days.length * 96, steps = -origin / 15, mean = a => a.length ? a.reduce((p, c) => p + c, 0) / a.length : NaN;
-    const truthAll = [], truth = [[], []];
-    days.forEach((d, k) => { for (let sl = 0; sl < 96; sl++) { const t = decodeTruth(tms[k], sl, meta.truth_scale); truthAll.push(t);
-      [0, 1].forEach(side => truth[side].push(mean(t.slice(12 - steps).map(v => v[side]).filter(isFinite)))); } });
-    const tvals = []; truth.forEach(a => a.forEach(v => { if (isFinite(v)) tvals.push(v); }));
     const items = models.map((m, mi) => {
-      const q = [[], []], ys = [], ps = [];
+      const q = [[], []];
       days.forEach((d, k) => { for (let sl = 0; sl < 96; sl++) {
         const fc = decodeForecast(fms[mi][k], sl, origin, meta.forecast_scale);
         [0, 1].forEach(side => q[side].push(fc ? [0, 1, 2].map(j => mean(fc.map(r => r[side][j]))) : null));
-        if (fc) collect(fc, truthAll[k * 96 + sl], ys, ps); } });
+        } });
       // robust range of this model (0.5th to 99.5th percentile): rare extremes are cut at the frame
-      const vals = tvals.slice(); q.forEach(a => a.forEach(v => v && v.forEach(u => { if (isFinite(u)) vals.push(u); })));
+      const vals = []; q.forEach(a => a.forEach(v => v && v.forEach(u => { if (isFinite(u)) vals.push(u); })));
       vals.sort((a, b) => a - b);
       const lo = vals.length ? vals[Math.floor(vals.length * 0.005)] : 0, hi = vals.length ? vals[Math.ceil(vals.length * 0.995) - 1] : 100;
       const padY = (hi - lo || 10) * 0.08;
-      return { key: m, wk: { n, days, truth, q }, sc: scoreArrays(ys, ps), yr: [lo - padY, hi + padY] };
+      return { key: m, wk: { n, days, q }, yr: [lo - padY, hi + padY] };
     });
     const label = `${+days[0].slice(8)} to ${+days[days.length - 1].slice(8)} ${MONTHS[+days[0].slice(5, 7) - 1]} 2024`;
     panels.replaceChildren(); currentWeek = [];
     items.forEach(it => {
       const p = document.createElement("div"); p.className = "panel";
-      p.innerHTML = `<h3>${meta.display_names[it.key]}</h3><p class="sub"><span>Deliveries ${label}, origin ${origin.replace("-", "−")} min</span><span class="scores">${scoreHtml(it.sc)}</span></p><div class="plot"></div>`;
+      p.innerHTML = `<h3>${meta.display_names[it.key]}</h3><p class="sub"><span>Deliveries ${label}, origin ${origin.replace("-", "−")} min</span></p><div class="plot"></div>`;
       panels.appendChild(p);
       const job = { host: p.querySelector(".plot"), wk: it.wk, yr: it.yr }; currentWeek.push(job); drawWeek(job.host, job.wk, job.yr);
     });
@@ -735,7 +685,7 @@ async function renderWeek() {
   MONTHS.forEach((m, i) => $("c-month").add(new Option(m + " 2024", i + 1))); $("c-month").value = 7;
   [1, 2, 3, 4, 5].forEach(w => $("c-week").add(new Option(w === 5 ? "Week 5 (day 29 to end)" : `Week ${w} (day ${(w - 1) * 7 + 1} to ${w * 7})`, w))); $("c-week").value = 4;
   ["c-month", "c-week"].forEach(id => $(id).addEventListener("change", renderWeek));
-  let t; addEventListener("resize", () => { clearTimeout(t); t = setTimeout(() => { current.forEach(j => drawChart(j.host, j.fc, j.truth, j.origin, j.yr)); currentWeek.forEach(j => drawWeek(j.host, j.wk, j.yr)); }, 150); });
+  let t; addEventListener("resize", () => { clearTimeout(t); t = setTimeout(() => { current.forEach(j => drawChart(j.host, j.fc, j.origin, j.yr)); currentWeek.forEach(j => drawWeek(j.host, j.wk, j.yr)); }, 150); });
   addEventListener("scroll", hideTip, { passive: true });
   if (!("DecompressionStream" in window)) return status("Your browser is too old for the interactive forecasts. Please update it, or use the download below.");
   status("Loading forecasts …");
